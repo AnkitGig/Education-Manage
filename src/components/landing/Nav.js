@@ -32,7 +32,7 @@ export default function LandingNav({ loggedIn }) {
             <Link href="/dashboard" className="inline-flex h-10 items-center rounded-lg bg-royal px-5 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700">Open dashboard</Link>
           ) : (<>
             <Link href="/login" className="inline-flex h-10 items-center rounded-lg border border-royal px-5 text-sm font-semibold text-royal transition hover:bg-royal-50">Log in</Link>
-            <Link href="/login" className="inline-flex h-10 items-center rounded-lg bg-royal px-5 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700">Get started free</Link>
+            <Link href="/signup" className="inline-flex h-10 items-center rounded-lg bg-royal px-5 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700">Get started free</Link>
           </>)}
         </div>
         <button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">{open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}</button>
@@ -48,7 +48,7 @@ export default function LandingNav({ loggedIn }) {
           <a href="#pricing" onClick={() => setOpen(false)} className="block px-3 py-3 text-sm font-semibold text-navy">Pricing</a>
           <div className="mt-2 grid grid-cols-2 gap-3">
             <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-lg border border-royal text-sm font-semibold text-royal">Log in</Link>
-            <Link href={loggedIn ? '/dashboard' : '/login'} className="inline-flex h-11 items-center justify-center rounded-lg bg-royal text-sm font-semibold text-white">{loggedIn ? 'Dashboard' : 'Get started'}</Link>
+            <Link href={loggedIn ? '/dashboard' : '/signup'} className="inline-flex h-11 items-center justify-center rounded-lg bg-royal text-sm font-semibold text-white">{loggedIn ? 'Dashboard' : 'Sign up'}</Link>
           </div>
         </div>
       )}

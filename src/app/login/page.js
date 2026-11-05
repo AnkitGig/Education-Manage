@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, Wallet, CalendarCheck, MessageCircle, BarChart3 } from 'lucide-react';
+import Link from 'next/link';
+import { GraduationCap, Wallet, CalendarCheck, MessageCircle, BarChart3, ArrowLeft } from 'lucide-react';
 import { api, run } from '@/lib/client';
 import { Field } from '@/components/ui';
 
@@ -44,7 +45,21 @@ export default function Login() {
 
       <div className="flex items-center justify-center bg-white p-6">
         <form onSubmit={submit} className="w-full max-w-sm space-y-5">
-          <div className="flex items-center gap-3 lg:hidden"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white"><GraduationCap className="h-5 w-5" /></span><span className="text-xl font-extrabold">EduManage</span></div>
+          <div className="flex items-center justify-between mb-1">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-ink-900 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to home</span>
+            </Link>
+            <div className="flex items-center gap-2 lg:hidden">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white">
+                <GraduationCap className="h-4 w-4" />
+              </span>
+              <span className="text-sm font-extrabold">EduManage</span>
+            </div>
+          </div>
           <div>
             <h2 className="text-3xl font-extrabold tracking-tight">{setup ? 'Set up your institute' : 'Welcome back'}</h2>
             <p className="mt-1.5 text-sm text-ink-500">{setup ? 'Create the admin account to get started.' : 'Sign in to manage your institute.'}</p>
@@ -56,6 +71,14 @@ export default function Login() {
           <Field label="Email" required><input type="email" className="inp" value={f.email} onChange={set('email')} placeholder="you@institute.com" required /></Field>
           <Field label="Password" required><input type="password" className="inp" value={f.password} onChange={set('password')} minLength={6} placeholder="At least 6 characters" required /></Field>
           <button className="btn-primary h-11 w-full text-[15px]" disabled={busy}>{busy ? 'Please wait…' : setup ? 'Create account' : 'Sign in'}</button>
+          {!setup && (
+            <p className="text-center text-sm text-ink-600">
+              Don&apos;t have an account?{' '}
+              <a href="/signup" className="font-semibold text-brand-600 hover:text-brand-700 underline">
+                Sign up
+              </a>
+            </p>
+          )}
           {setup && <p className="text-center text-xs text-ink-500">This first account becomes the institute admin.</p>}
         </form>
       </div>
