@@ -27,6 +27,15 @@ After creating the admin account, open **Dashboard → Load sample data** (or Se
 100 students, 6 teachers, 12 batches, 6 months of fees, attendance, salaries, expenses and notices.
 Use **Clear all data** in Settings when you are ready to enter your real data.
 
+### Landing page
+The public marketing page lives at `/` (`src/app/page.js`; navbar, logo and testimonial slider in `src/components/landing/`).
+It uses a royal-blue theme, separate from the purple app theme. Photos are in `public/landing/` – swap in your own
+(same file names) for sharper images.
+
+**Before publishing:** the client logos, the "1,000+ institutes / 5,00,000+ students / 1 Cr+ messages / 99.9% uptime"
+figures and the testimonials are SAMPLE content from the design mock-up (see the `TRUSTED`, `STATS` and `TESTIMONIALS`
+arrays at the top of `src/app/page.js`). Replace them with real, verifiable data and logos you have permission to use.
+
 ## 2. Typical workflow
 1. **Courses & Batches** → add a course (with fee for each plan) → add batches (teacher, days, timings).
 2. **Teachers** → add teachers (do this before batches if you want to assign them).

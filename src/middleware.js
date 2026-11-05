@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const PUBLIC = ['/login', '/api/auth/login', '/api/setup'];
+const PUBLIC = ['/', '/login', '/api/auth/login', '/api/setup'];
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
-  if (PUBLIC.includes(pathname) || pathname.startsWith('/api/cron')) return NextResponse.next();
+  if (PUBLIC.includes(pathname) || pathname.startsWith('/api/cron') || pathname.startsWith('/landing')) return NextResponse.next();
   const token = req.cookies.get('token')?.value;
   try {
     if (!token) throw new Error('no token');
