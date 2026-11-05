@@ -47,9 +47,17 @@ function Students() {
             <select className="inp w-auto" value={f.course} onChange={(e) => set({ course: e.target.value, batch: '' })}><option value="">All Courses</option>{courses?.data.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</select>
             <select className="inp w-auto" value={f.batch} onChange={(e) => set({ batch: e.target.value })}><option value="">All Batches</option>{batches?.data.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}</select>
           </div>
-          <Table loading={isLoading} rows={data?.data} activeId={sel?._id} onRowClick={setSel} empty="No students found" cols={[
+          <Table loading={isLoading} rows={data?.data} activeId={sel?._id} onRowClick={(s) => setSel(s)} cols={[
             { h: '#', render: (_, i) => (f.page - 1) * limit + i + 1 },
-            { h: 'Student Name', render: (s) => <div className="flex items-center gap-2"><Avatar src={s.photo?.url} name={s.name} /><div><div className="font-semibold">{s.name}</div><div className="text-xs text-slate-500">ID: {s.studentId}</div></div></div> },
+            { h: 'Student Name', render: (s) => (
+              <Link href={`/students/${s._id}`} className="flex items-center gap-2 group hover:opacity-90" onClick={(e) => e.stopPropagation()}>
+                <Avatar src={s.photo?.url} name={s.name} />
+                <div>
+                  <div className="font-semibold text-ink group-hover:text-brand-600 transition-colors">{s.name}</div>
+                  <div className="text-xs text-slate-500">ID: {s.studentId}</div>
+                </div>
+              </Link>
+            )},
             { h: 'Course', render: (s) => s.course?.name },
             { h: 'Batch', render: (s) => s.batch?.name },
             { h: 'Phone', render: (s) => s.mobile || s.parentMobile },
@@ -57,8 +65,8 @@ function Students() {
             { h: 'Status', render: (s) => <StatusBadge s={s.status} /> },
             { h: 'Actions', render: (s) => (
               <div className="flex items-center gap-2 text-slate-500" onClick={(e) => e.stopPropagation()}>
-                <button onClick={() => setSel(s)} title="View"><Eye className="h-4 w-4 text-brand-600" /></button>
-                <Link href={`/students/${s._id}`} title="Edit"><Pencil className="h-4 w-4 text-brand-600" /></Link>
+                <Link href={`/students/${s._id}`} title="View Full Profile"><Eye className="h-4 w-4 text-brand-600" /></Link>
+                <Link href={`/students/${s._id}/edit`} title="Edit"><Pencil className="h-4 w-4 text-brand-600" /></Link>
                 <button onClick={() => del(s)} title="Delete"><Trash2 className="h-4 w-4 text-red-500" /></button>
               </div>) },
           ]} />
@@ -93,8 +101,11 @@ function Students() {
             </div>
           </Card>
           <div className="flex gap-2">
-            <button className="btn-green flex-1" onClick={() => run(() => api('/api/whatsapp/send', 'POST', { scope: 'student', student: sel._id, template: 'fee_due' }), 'WhatsApp sent')}><MessageCircle className="h-4 w-4" />Send WhatsApp</button>
-            <Link href={`/students/${sel._id}`} className="btn-outline flex-1"><Pencil className="h-4 w-4" />Edit Student</Link>
+            <Link href={`/students/${sel._id}`} className="btn-primary flex-1"><Eye className="h-4 w-4" />View Full Profile</Link>
+            <Link href={`/students/${sel._id}/edit`} className="btn-outline flex-1"><Pencil className="h-4 w-4" />Edit</Link>
+          </div>
+          <div>
+            <button className="btn-green w-full" onClick={() => run(() => api('/api/whatsapp/send', 'POST', { scope: 'student', student: sel._id, template: 'fee_due' }), 'WhatsApp sent')}><MessageCircle className="h-4 w-4" />Send WhatsApp</button>
           </div>
         </aside></>
       )}

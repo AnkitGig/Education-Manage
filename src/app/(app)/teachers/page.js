@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { Users, GraduationCap, PauseCircle, UserX, IndianRupee, Plus, Search, Download, Pencil, Trash2, Phone, Mail, X, Upload, BookOpen, CalendarDays, Wallet } from 'lucide-react';
+import Link from 'next/link';
+import { Users, GraduationCap, PauseCircle, UserX, IndianRupee, Plus, Search, Download, Pencil, Trash2, Phone, Mail, X, Upload, BookOpen, CalendarDays, Wallet, Eye } from 'lucide-react';
 import { useApi, api, run, qs, fmtDate, upload, downloadCSV, thisMonth } from '@/lib/client';
 import { Stat, Card, Table, Pager, Tabs, StatusBadge, Badge, Avatar, PageHeader, Modal, Field, inr } from '@/components/ui';
 
@@ -75,12 +76,26 @@ export default function Teachers() {
           </div>
           <Table loading={isLoading} rows={data?.data} activeId={sel?._id} onRowClick={(t) => { setSel(t); setTab('overview'); }} empty="No teachers found" cols={[
             { h: '#', render: (_, i) => (f.page - 1) * limit + i + 1 },
-            { h: 'Teacher Name', render: (t) => <div className="flex items-center gap-2"><Avatar src={t.photo?.url} name={t.name} /><div><div className="font-semibold">{t.name}</div><div className="text-xs text-slate-500">ID: {t.teacherId}</div></div></div> },
+            { h: 'Teacher Name', render: (t) => (
+              <Link href={`/teachers/${t._id}`} className="flex items-center gap-2 group hover:opacity-90" onClick={(e) => e.stopPropagation()}>
+                <Avatar src={t.photo?.url} name={t.name} />
+                <div>
+                  <div className="font-semibold text-ink group-hover:text-brand-600 transition-colors">{t.name}</div>
+                  <div className="text-xs text-slate-500">ID: {t.teacherId}</div>
+                </div>
+              </Link>
+            )},
             { h: 'Subjects', render: (t) => <div className="flex flex-wrap gap-1">{t.subjects.map((s, i) => <Badge key={s} tone={SUBJ_TONE[i % 4]}>{s}</Badge>)}</div> },
             { h: 'Batches', render: (t) => `${t.batches} Batches` },
             { h: 'Salary (Monthly)', render: (t) => <b>{inr(t.salary)}</b> },
             { h: 'Status', render: (t) => <StatusBadge s={t.status} /> },
-            { h: 'Actions', render: (t) => <div className="flex gap-2" onClick={(e) => e.stopPropagation()}><button onClick={() => setModal({ initial: t })}><Pencil className="h-4 w-4 text-brand-600" /></button><button onClick={() => del(t)}><Trash2 className="h-4 w-4 text-red-500" /></button></div> },
+            { h: 'Actions', render: (t) => (
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Link href={`/teachers/${t._id}`} title="View Full Profile"><Eye className="h-4 w-4 text-brand-600" /></Link>
+                <button onClick={() => setModal({ initial: t })} title="Edit"><Pencil className="h-4 w-4 text-brand-600" /></button>
+                <button onClick={() => del(t)} title="Delete"><Trash2 className="h-4 w-4 text-red-500" /></button>
+              </div>
+            )},
           ]} />
           <Pager page={f.page} pages={data?.pages || 1} total={data?.total || 0} limit={limit} onPage={(p) => setF({ ...f, page: p })} label="teachers" />
         </Card>
@@ -99,7 +114,13 @@ export default function Teachers() {
           <Card title="Salary & Payments">
             <div className="grid grid-cols-3 gap-2 text-sm"><div><div className="text-xs text-slate-500">Total (YTD)</div><b>{inr(paid + pending)}</b></div><div><div className="text-xs text-slate-500">Paid</div><b className="text-emerald-600">{inr(paid)}</b></div><div><div className="text-xs text-slate-500">Pending</div><b className="text-red-500">{inr(pending)}</b></div></div>
           </Card>
-          <div className="flex gap-2"><button className="btn-outline flex-1" onClick={() => setModal({ initial: sel })}><Pencil className="h-4 w-4" />Edit Teacher</button><button className="btn-primary flex-1" onClick={markSalary}><IndianRupee className="h-4 w-4" />Mark Salary</button></div>
+          <div className="flex gap-2">
+            <Link href={`/teachers/${sel._id}`} className="btn-primary flex-1"><Eye className="h-4 w-4" />View Full Profile</Link>
+            <button className="btn-outline flex-1" onClick={() => setModal({ initial: sel })}><Pencil className="h-4 w-4" />Edit</button>
+          </div>
+          <div>
+            <button className="btn-outline w-full" onClick={markSalary}><IndianRupee className="h-4 w-4" />Mark Salary Paid</button>
+          </div>
         </aside></>
       )}
       <TeacherModal key={(modal?.initial?._id || 'new') + !!modal} open={!!modal} initial={modal?.initial} onClose={() => setModal(null)} onSaved={mutate} />
