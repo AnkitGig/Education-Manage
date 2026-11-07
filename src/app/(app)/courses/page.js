@@ -117,15 +117,14 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
 
   const [f, setF] = useState(null);
   const v =
-    f ||
-    initial || {
-      name: '',
-      teacher: '',
-      startTime: '08:00',
-      endTime: '14:00',
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      room: '',
-      timetable: [],
+    f || {
+      name: initial?.name || '',
+      teacher: initial?.teacher?._id || initial?.teacher || '',
+      startTime: initial?.startTime || '08:00',
+      endTime: initial?.endTime || '14:00',
+      days: initial?.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      room: initial?.room || '',
+      timetable: initial?.timetable || [],
     };
 
   const toggle = (d) =>
@@ -137,13 +136,17 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
   const subj = (d) => v.timetable?.find((t) => t.day === d)?.subject || '';
 
   const save = async () => {
+    const teacherId = v.teacher?._id || (typeof v.teacher === 'string' && v.teacher ? v.teacher : null);
     const body = {
-      ...v,
+      name: v.name,
       course: initial?.course?._id || initial?.course || courseId,
-      teacher: v.teacher?._id || v.teacher || undefined,
-      timetable: v.days.map((d) => ({ day: d, subject: subj(d) })),
+      teacher: teacherId || null,
+      startTime: v.startTime || '08:00',
+      endTime: v.endTime || '14:00',
+      room: v.room || '',
+      days: v.days || [],
+      timetable: (v.days || []).map((d) => ({ day: d, subject: subj(d) })),
     };
-    delete body.students;
     const r = await run(
       () => (initial ? api(`/api/batches/${initial._id}`, 'PUT', body) : api('/api/batches', 'POST', body)),
       'Section saved & Teacher assigned'
@@ -316,7 +319,7 @@ export default function Courses() {
         <Stat icon={BookOpen} tone="green" label="Total Classes" value={courses?.data.length ?? '–'} />
         <Stat icon={Layers} tone="purple" label="Total Sections" value={totals.b} />
         <Stat icon={Users} tone="blue" label="Total Enrolled Students" value={totals.s} />
-        <Stat icon={UserCog} tone="orange" label="Teaching Staff" value={staffStats?.stats?.teaching ?? 0} />
+        <Stat icon={UserCog} tone="orange" label="Teaching Staff" value={staffStats?.stats?.teachersCount ?? 0} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">

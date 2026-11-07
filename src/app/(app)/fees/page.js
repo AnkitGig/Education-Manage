@@ -28,7 +28,8 @@ import {
   ShieldCheck,
   X,
   Printer,
-  Check
+  Check,
+  Pencil
 } from 'lucide-react';
 import {
   ComposedChart,
@@ -78,6 +79,15 @@ export default function FeesAccountsPage() {
   const [pay, setPay] = useState({ amount: '', mode: 'UPI' });
   const [collectModal, setCollectModal] = useState(false);
   const [receiptModal, setReceiptModal] = useState(null);
+  const [structureModal, setStructureModal] = useState(false);
+  const [structureForm, setStructureForm] = useState({
+    courseId: '',
+    tuition: '',
+    exam: '',
+    lab: '',
+    library: '',
+    frequency: 'monthly',
+  });
   // Receipts tab search and filter
   const [receiptSearch, setReceiptSearch] = useState('');
   const [receiptMode, setReceiptMode] = useState('');
@@ -93,7 +103,7 @@ export default function FeesAccountsPage() {
   };
 
   // APIs
-  const { data: dashData, isLoading: dashLoading } = useApi('/api/fees/dashboard');
+  const { data: dashData, isLoading: dashLoading, mutate: mutateDash } = useApi('/api/fees/dashboard');
   const { data: feesData, isLoading: feesLoading, mutate: mutateFees } = useApi(
     `/api/fees?${qs({ ...f, status: getStatusForTab(), limit })}`
   );
@@ -133,6 +143,39 @@ export default function FeesAccountsPage() {
       mutateFees();
       if (mutateSum) mutateSum();
     }
+  };
+
+  const handleSaveStructure = async (e) => {
+    e.preventDefault();
+    if (!structureForm.courseId) return;
+    const r = await run(
+      () => api('/api/fees/structures', 'POST', structureForm),
+      'Fee Structure saved successfully'
+    );
+    if (r) {
+      setStructureModal(false);
+      setStructureForm({
+        courseId: '',
+        tuition: '',
+        exam: '',
+        lab: '',
+        library: '',
+        frequency: 'monthly',
+      });
+      mutateDash();
+    }
+  };
+
+  const handleOpenEditStructure = (f) => {
+    setStructureForm({
+      courseId: f.courseId || '',
+      tuition: f.tuition || '',
+      exam: f.exam || '',
+      lab: f.lab || '',
+      library: f.library || '',
+      frequency: f.frequency ? f.frequency.toLowerCase().replace(' ', '_') : 'monthly',
+    });
+    setStructureModal(true);
   };
 
   const handleRemindWhatsApp = (studentId) => {
@@ -382,7 +425,17 @@ export default function FeesAccountsPage() {
                 <h3 className="text-sm font-bold text-ink">Standard Fee Structures</h3>
                 <p className="text-xs text-ink-400">Tuition fees, lab fees, examination charges and payment frequencies</p>
               </div>
-              <button onClick={() => alert('Add Fee Structure modal')} className="btn-primary text-xs h-9">
+              <button onClick={() => {
+                setStructureForm({
+                  courseId: courses?.data?.[0]?._id || '',
+                  tuition: '',
+                  exam: '',
+                  lab: '',
+                  library: '',
+                  frequency: 'monthly',
+                });
+                setStructureModal(true);
+              }} className="btn-primary text-xs h-9">
                 <Plus className="h-3.5 w-3.5" /> Add Fee Structure
               </button>
             </div>
@@ -390,13 +443,25 @@ export default function FeesAccountsPage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {feeStructures.length > 0 ? (
                 feeStructures.map((f, i) => (
-                  <div key={i} className="card p-4 transition hover:-translate-y-0.5">
-                    <div className="text-xs font-bold text-brand-600">{f.class}</div>
+                  <div key={i} className="card p-4 transition hover:-translate-y-0.5 group relative">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-brand-600">{f.class}</div>
+                      <button
+                        onClick={() => handleOpenEditStructure(f)}
+                        title="Configure Fee"
+                        className="rounded-lg p-1 text-ink-400 hover:text-brand-600 hover:bg-brand-50"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                     <div className="mt-2 text-2xl font-black text-ink">{inr(f.total)}</div>
                     <div className="mt-3 space-y-1.5 border-t border-ink/[.06] pt-2.5 text-xs text-ink-600">
                       <div className="flex justify-between"><span>Tuition:</span> <b className="text-ink">{inr(f.tuition)}</b></div>
                       <div className="flex justify-between"><span>Exam Fee:</span> <b className="text-ink">{inr(f.exam)}</b></div>
                       <div className="flex justify-between"><span>Lab Fee:</span> <b className="text-ink">{inr(f.lab)}</b></div>
+                      {f.library > 0 && (
+                        <div className="flex justify-between"><span>Library:</span> <b className="text-ink">{inr(f.library)}</b></div>
+                      )}
                       <div className="flex justify-between pt-1 border-t border-ink/[.04]">
                         <span>Frequency:</span> <Badge tone="green">{f.frequency}</Badge>
                       </div>
@@ -405,7 +470,7 @@ export default function FeesAccountsPage() {
                 ))
               ) : (
                 <div className="col-span-full py-8 text-center text-xs text-ink-400">
-                  No fee structures configured yet. Add courses with fee plans to view them here.
+                  No fee structures configured yet. Click 'Add Fee Structure' to configure class fees.
                 </div>
               )}
             </div>
@@ -730,6 +795,121 @@ export default function FeesAccountsPage() {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* Configure / Add Fee Structure Modal */}
+      {structureModal && (
+        <Modal
+          open={structureModal}
+          onClose={() => setStructureModal(false)}
+          title="Configure Class Fee Structure"
+          width="max-w-md"
+        >
+          <form onSubmit={handleSaveStructure} className="space-y-4">
+            <Field label="Select Class" required>
+              <select
+                className="inp"
+                value={structureForm.courseId}
+                onChange={(e) => setStructureForm({ ...structureForm, courseId: e.target.value })}
+                required
+              >
+                <option value="">Select Class</option>
+                {courses?.data.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Tuition Fee (₹)" required>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  className="inp"
+                  value={structureForm.tuition}
+                  onChange={(e) => setStructureForm({ ...structureForm, tuition: e.target.value })}
+                  placeholder="e.g. 25000"
+                />
+              </Field>
+
+              <Field label="Examination Fee (₹)">
+                <input
+                  type="number"
+                  min="0"
+                  className="inp"
+                  value={structureForm.exam}
+                  onChange={(e) => setStructureForm({ ...structureForm, exam: e.target.value })}
+                  placeholder="e.g. 2500"
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Lab / Activity Fee (₹)">
+                <input
+                  type="number"
+                  min="0"
+                  className="inp"
+                  value={structureForm.lab}
+                  onChange={(e) => setStructureForm({ ...structureForm, lab: e.target.value })}
+                  placeholder="e.g. 1500"
+                />
+              </Field>
+
+              <Field label="Library Fee (₹)">
+                <input
+                  type="number"
+                  min="0"
+                  className="inp"
+                  value={structureForm.library}
+                  onChange={(e) => setStructureForm({ ...structureForm, library: e.target.value })}
+                  placeholder="e.g. 500"
+                />
+              </Field>
+            </div>
+
+            <Field label="Billing Frequency" required>
+              <select
+                className="inp"
+                value={structureForm.frequency}
+                onChange={(e) => setStructureForm({ ...structureForm, frequency: e.target.value })}
+              >
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly (3 Months)</option>
+                <option value="half_yearly">Half-Yearly (6 Months)</option>
+                <option value="yearly">Yearly (Annual)</option>
+              </select>
+            </Field>
+
+            <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-3 text-center">
+              <div className="text-xs text-ink-500 font-semibold uppercase">Total Fee Per Student</div>
+              <div className="mt-1 text-2xl font-black text-brand-700">
+                {inr(
+                  (Number(structureForm.tuition) || 0) +
+                    (Number(structureForm.exam) || 0) +
+                    (Number(structureForm.lab) || 0) +
+                    (Number(structureForm.library) || 0)
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setStructureModal(false)}
+                className="btn border border-ink/10 text-xs"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary text-xs">
+                Save Fee Structure
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

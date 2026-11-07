@@ -31,6 +31,9 @@ export const GET = wrap(async (req, { params }) => {
 export const PUT = wrap(async (req, { params }) => {
   await connectDB();
   const body = await req.json();
+  if (body.teacher === '' || body.teacher === null) {
+    body.teacher = null;
+  }
   const oldBatch = await Batch.findById(params.id).lean();
   const updated = await Batch.findByIdAndUpdate(params.id, body, { new: true });
 

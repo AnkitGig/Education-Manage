@@ -53,6 +53,7 @@ export const GET = wrap(async (req) => {
 export const POST = wrap(async (req) => {
   await connectDB();
   const body = await req.json();
+  if (!body.teacher) delete body.teacher;
   const batch = await Batch.create(body);
   if (batch.teacher) {
     await syncStaffAssignedClasses(batch.teacher);

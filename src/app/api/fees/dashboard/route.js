@@ -3,6 +3,7 @@ import { wrap } from '@/lib/crud';
 import { connectDB } from '@/lib/db';
 import FeeRecord from '@/models/FeeRecord';
 import Course from '@/models/Course';
+import FeeStructure from '@/models/FeeStructure';
 import Student from '@/models/Student';
 import { curMonth, feeStatus } from '@/lib/utils';
 
@@ -25,8 +26,11 @@ export const GET = wrap(async () => {
     .sort({ createdAt: -1 })
     .lean();
 
-  // 2. Fetch all Courses for Dynamic Fee Structure
-  const courses = await Course.find({ status: 'active' }).lean();
+  // 2. Fetch all Courses and saved FeeStructures
+  const [courses, savedStructures] = await Promise.all([
+    Course.find({ status: 'active' }).lean(),
+    FeeStructure.find().lean(),
+  ]);
 
   // 3. Compute KPI Aggregates
   let totalFee = 0;
@@ -138,8 +142,25 @@ export const GET = wrap(async () => {
     partiallyPaid,
   };
 
-  // 7. Dynamic Fee Structures from Active Courses
+  // 7. Dynamic Fee Structures from saved FeeStructure collection or Course fees
+  const structureMap = Object.fromEntries(savedStructures.map((s) => [String(s.course), s]));
+
   const feeStructures = courses.map((c) => {
+    const saved = structureMap[String(c._id)];
+    if (saved) {
+      return {
+        _id: saved._id,
+        courseId: c._id,
+        class: c.name,
+        tuition: saved.tuition || 0,
+        exam: saved.exam || 0,
+        lab: saved.lab || 0,
+        library: saved.library || 0,
+        total: saved.total || 0,
+        frequency: saved.frequency || 'monthly',
+      };
+    }
+
     const primaryPlan = c.fees && c.fees.length > 0 ? c.fees[0] : null;
     const tuition = primaryPlan?.amount || 0;
     const exam = Math.round(tuition * 0.1);
@@ -147,12 +168,14 @@ export const GET = wrap(async () => {
     const total = tuition + exam + lab;
 
     return {
+      courseId: c._id,
       class: c.name,
       tuition,
       exam,
       lab,
+      library: 0,
       total: total || tuition,
-      frequency: primaryPlan?.plan ? primaryPlan.plan.replace('_', ' ') : 'Annual',
+      frequency: primaryPlan?.plan ? primaryPlan.plan.replace('_', ' ') : 'monthly',
     };
   });
 

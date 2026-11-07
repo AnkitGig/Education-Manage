@@ -21,3 +21,4 @@ S.pre('save', function (next) {
 });
 
 export default mongoose.models.FeeStructure || mongoose.model('FeeStructure', S);
+
