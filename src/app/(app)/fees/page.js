@@ -78,6 +78,9 @@ export default function FeesAccountsPage() {
   const [pay, setPay] = useState({ amount: '', mode: 'UPI' });
   const [collectModal, setCollectModal] = useState(false);
   const [receiptModal, setReceiptModal] = useState(null);
+  // Receipts tab search and filter
+  const [receiptSearch, setReceiptSearch] = useState('');
+  const [receiptMode, setReceiptMode] = useState('');
 
   const limit = 8;
   const setFilter = (o) => setF((x) => ({ ...x, page: 1, ...o }));
@@ -109,6 +112,18 @@ export default function FeesAccountsPage() {
   const dueAlerts = dashData?.dueAlerts || { dueIn7Days: 28, overdue: 46, partiallyPaid: 19 };
   const feeStructures = dashData?.feeStructures || [];
 
+  // Filtered receipts list for the receipts tab
+  const filteredReceipts = recentList.filter((r) => {
+    const q = receiptSearch.toLowerCase().trim();
+    const matchSearch =
+      !q ||
+      r.receiptNo?.toLowerCase().includes(q) ||
+      r.name?.toLowerCase().includes(q) ||
+      r.class?.toLowerCase().includes(q);
+    const matchMode = !receiptMode || r.mode === receiptMode;
+    return matchSearch && matchMode;
+  });
+
   const handleCollect = async () => {
     if (!sid || !pay.amount) return;
     const r = await run(() => api('/api/fees/collect', 'POST', { student: sid, ...pay }), 'Payment collected successfully');
@@ -130,7 +145,7 @@ export default function FeesAccountsPage() {
   const exportFeesCSV = () => {
     downloadCSV(`fees_${tab}_${academicYear}.csv`, [
       ['Receipt / ID', 'Student', 'Class', 'Amount', 'Mode / Status', 'Date'],
-      ...recentList.map((r) => [r.receiptNo, r.name, r.class, r.amount, r.mode, r.date]),
+      ...filteredReceipts.map((r) => [r.receiptNo, r.name, r.class, r.amount, r.mode, r.date]),
     ]);
   };
 
@@ -172,23 +187,23 @@ export default function FeesAccountsPage() {
           icon={Wallet}
           tone="blue"
           label="Total Fee (This Year)"
-          value="₹ 1,20,00,000"
+          value={inr(dashData?.kpis?.totalFee || 0)}
           sub="Annual target"
         />
         <Stat
           icon={CheckCircle2}
           tone="green"
           label="Collected Fees"
-          value="₹ 96,50,000"
-          sub="80.4% collected"
+          value={inr(dashData?.kpis?.collectedFees || 0)}
+          sub={dashData?.kpis?.totalFee ? `${Math.round(((dashData.kpis.collectedFees || 0) / dashData.kpis.totalFee) * 100)}% collected` : '0% collected'}
           subTone="text-emerald-600 font-bold"
         />
         <Stat
           icon={AlertTriangle}
           tone="red"
           label="Pending Fees"
-          value="₹ 23,50,000"
-          sub="19.6% remaining"
+          value={inr(dashData?.kpis?.pendingFees || 0)}
+          sub={dashData?.kpis?.totalFee ? `${Math.round(((dashData.kpis.pendingFees || 0) / dashData.kpis.totalFee) * 100)}% remaining` : '0% remaining'}
           subTone="text-rose-500 font-bold"
         />
       </div>
@@ -254,35 +269,41 @@ export default function FeesAccountsPage() {
                 </div>
 
                 <div className="overflow-x-auto mt-2">
-                  <table className="w-full text-left text-xs">
-                    <thead className="border-b border-ink/[.04] text-ink-400 font-semibold uppercase">
-                      <tr>
-                        <th className="py-2.5">Receipt</th>
-                        <th className="py-2.5">Student</th>
-                        <th className="py-2.5">Class</th>
-                        <th className="py-2.5">Amount</th>
-                        <th className="py-2.5 text-center">Mode</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {recentList.map((r, i) => (
-                        <tr key={i} className="hover:bg-brand-50/40">
-                          <td className="py-2.5 font-semibold text-ink">{r.receiptNo}</td>
-                          <td className="py-2.5 font-bold text-ink flex items-center gap-2">
-                            <Avatar name={r.name} size={24} />
-                            <span>{r.name}</span>
-                          </td>
-                          <td className="py-2.5 text-ink-500 font-medium">{r.class}</td>
-                          <td className="py-2.5 font-extrabold text-ink">₹ {r.amount?.toLocaleString('en-IN')}</td>
-                          <td className="py-2.5 text-center">
-                            <Badge tone={r.mode === 'Online' ? 'green' : r.mode === 'UPI' ? 'purple' : 'orange'}>
-                              {r.mode}
-                            </Badge>
-                          </td>
+                  {recentList.length > 0 ? (
+                    <table className="w-full text-left text-xs">
+                      <thead className="border-b border-ink/[.04] text-ink-400 font-semibold uppercase">
+                        <tr>
+                          <th className="py-2.5">Receipt</th>
+                          <th className="py-2.5">Student</th>
+                          <th className="py-2.5">Class</th>
+                          <th className="py-2.5">Amount</th>
+                          <th className="py-2.5 text-center">Mode</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {recentList.map((r, i) => (
+                          <tr key={i} className="hover:bg-brand-50/40">
+                            <td className="py-2.5 font-semibold text-ink">{r.receiptNo}</td>
+                            <td className="py-2.5 font-bold text-ink flex items-center gap-2">
+                              <Avatar name={r.name} size={24} />
+                              <span>{r.name}</span>
+                            </td>
+                            <td className="py-2.5 text-ink-500 font-medium">{r.class}</td>
+                            <td className="py-2.5 font-extrabold text-ink">₹ {r.amount?.toLocaleString('en-IN')}</td>
+                            <td className="py-2.5 text-center">
+                              <Badge tone={r.mode === 'Online' ? 'green' : r.mode === 'UPI' ? 'purple' : 'orange'}>
+                                {r.mode}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="py-10 text-center text-xs text-ink-400">
+                      No recent fee payments found.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -367,20 +388,26 @@ export default function FeesAccountsPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {feeStructures.map((f, i) => (
-                <div key={i} className="card p-4 transition hover:-translate-y-0.5">
-                  <div className="text-xs font-bold text-brand-600">{f.class}</div>
-                  <div className="mt-2 text-2xl font-black text-ink">{inr(f.total)}</div>
-                  <div className="mt-3 space-y-1.5 border-t border-ink/[.06] pt-2.5 text-xs text-ink-600">
-                    <div className="flex justify-between"><span>Tuition:</span> <b className="text-ink">{inr(f.tuition)}</b></div>
-                    <div className="flex justify-between"><span>Exam Fee:</span> <b className="text-ink">{inr(f.exam)}</b></div>
-                    <div className="flex justify-between"><span>Lab Fee:</span> <b className="text-ink">{inr(f.lab)}</b></div>
-                    <div className="flex justify-between pt-1 border-t border-ink/[.04]">
-                      <span>Frequency:</span> <Badge tone="green">{f.frequency}</Badge>
+              {feeStructures.length > 0 ? (
+                feeStructures.map((f, i) => (
+                  <div key={i} className="card p-4 transition hover:-translate-y-0.5">
+                    <div className="text-xs font-bold text-brand-600">{f.class}</div>
+                    <div className="mt-2 text-2xl font-black text-ink">{inr(f.total)}</div>
+                    <div className="mt-3 space-y-1.5 border-t border-ink/[.06] pt-2.5 text-xs text-ink-600">
+                      <div className="flex justify-between"><span>Tuition:</span> <b className="text-ink">{inr(f.tuition)}</b></div>
+                      <div className="flex justify-between"><span>Exam Fee:</span> <b className="text-ink">{inr(f.exam)}</b></div>
+                      <div className="flex justify-between"><span>Lab Fee:</span> <b className="text-ink">{inr(f.lab)}</b></div>
+                      <div className="flex justify-between pt-1 border-t border-ink/[.04]">
+                        <span>Frequency:</span> <Badge tone="green">{f.frequency}</Badge>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full py-8 text-center text-xs text-ink-400">
+                  No fee structures configured yet. Add courses with fee plans to view them here.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -506,14 +533,41 @@ export default function FeesAccountsPage() {
               </button>
             </div>
 
+            {/* Search & Mode Filter Bar */}
+            <div className="my-2 flex flex-wrap gap-3">
+              <div className="relative min-w-64 flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  className="inp pl-9"
+                  placeholder="Search receipt no, student name, class..."
+                  value={receiptSearch}
+                  onChange={(e) => setReceiptSearch(e.target.value)}
+                />
+              </div>
+
+              <select
+                className="inp w-auto"
+                value={receiptMode}
+                onChange={(e) => setReceiptMode(e.target.value)}
+              >
+                <option value="">All Payment Modes</option>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Online">Online / Netbanking</option>
+                <option value="Card">Debit / Credit Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+              </select>
+            </div>
+
             <Table
-              rows={recentList}
+              rows={filteredReceipts}
+              empty="No matching fee receipts found."
               cols={[
                 { h: 'Receipt No.', render: (r) => <span className="font-mono font-bold text-brand-700">{r.receiptNo}</span> },
                 { h: 'Student Name', render: (r) => <div className="font-bold text-ink">{r.name}</div> },
                 { h: 'Class Assigned', render: (r) => r.class },
                 { h: 'Amount Paid', render: (r) => <span className="font-extrabold text-ink">₹ {r.amount?.toLocaleString('en-IN')}</span> },
-                { h: 'Mode', render: (r) => <Badge tone="purple">{r.mode}</Badge> },
+                { h: 'Mode', render: (r) => <Badge tone={r.mode === 'Online' ? 'green' : r.mode === 'UPI' ? 'purple' : 'orange'}>{r.mode}</Badge> },
                 { h: 'Date Issued', render: (r) => r.date },
                 {
                   h: 'Print / View',

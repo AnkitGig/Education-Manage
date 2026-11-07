@@ -2,55 +2,159 @@ import { NextResponse } from 'next/server';
 import { wrap } from '@/lib/crud';
 import { connectDB } from '@/lib/db';
 import FeeRecord from '@/models/FeeRecord';
+import Course from '@/models/Course';
 import Student from '@/models/Student';
+import { curMonth, feeStatus } from '@/lib/utils';
 
 export const GET = wrap(async () => {
   await connectDB();
 
-  // Aggregate stats or return standard financial structure matching design
-  const [totalStudents] = await Promise.all([
-    Student.countDocuments({ status: 'active' }),
-  ]);
+  const now = new Date();
+  const currentMonthStr = curMonth(); // YYYY-MM
 
-  const totalFee = 12000000; // 1,20,00,000
-  const collectedFees = 9650000; // 96,50,000 (80.4%)
-  const pendingFees = 2350000; // 23,50,000 (19.6%)
+  // 1. Fetch all FeeRecords populated with student and course/batch
+  const feeRecords = await FeeRecord.find({})
+    .populate({
+      path: 'student',
+      select: 'name studentId photo course batch parentMobile',
+      populate: [
+        { path: 'course', select: 'name' },
+        { path: 'batch', select: 'name' },
+      ],
+    })
+    .sort({ createdAt: -1 })
+    .lean();
 
-  // Monthly collection timeline for dual bar & line chart
-  const monthlyOverview = [
-    { month: 'Apr', collected: 5.5, pending: 2.2, rate: 58 },
-    { month: 'May', collected: 6.8, pending: 2.5, rate: 64 },
-    { month: 'Jun', collected: 8.2, pending: 2.0, rate: 70 },
-    { month: 'Jul', collected: 9.5, pending: 2.2, rate: 75 },
-    { month: 'Aug', collected: 11.0, pending: 2.4, rate: 78 },
-    { month: 'Sep', collected: 12.8, pending: 2.8, rate: 84 },
-    { month: 'Oct', collected: 14.5, pending: 2.2, rate: 89 },
-    { month: 'Nov', collected: 16.0, pending: 2.5, rate: 94 },
-  ];
+  // 2. Fetch all Courses for Dynamic Fee Structure
+  const courses = await Course.find({ status: 'active' }).lean();
 
-  // Recent Fee Collections
-  const recentCollections = [
-    { receiptNo: 'RCP10245', name: 'Aarav Sharma', class: 'VIII - A', amount: 12000, mode: 'Online', date: '07 Nov 2026' },
-    { receiptNo: 'RCP10244', name: 'Ananya Verma', class: 'VII - B', amount: 12000, mode: 'Online', date: '07 Nov 2026' },
-    { receiptNo: 'RCP10243', name: 'Rohan Mehta', class: 'IX - A', amount: 15000, mode: 'UPI', date: '06 Nov 2026' },
-    { receiptNo: 'RCP10242', name: 'Kavya Singh', class: 'VI - A', amount: 10000, mode: 'Cash', date: '06 Nov 2026' },
-    { receiptNo: 'RCP10241', name: 'Aditya Gupta', class: 'VIII - B', amount: 12000, mode: 'Online', date: '05 Nov 2026' },
-  ];
+  // 3. Compute KPI Aggregates
+  let totalFee = 0;
+  let collectedFees = 0;
+  let pendingFees = 0;
 
-  // Due fee alerts
+  feeRecords.forEach((r) => {
+    totalFee += Number(r.amount || 0);
+    collectedFees += Number(r.paid || 0);
+  });
+  pendingFees = Math.max(0, totalFee - collectedFees);
+
+  // 4. Compute Last 8 Months Overview for Chart
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthlyMap = {};
+
+  // Initialize last 8 months in chronological order
+  for (let i = 7; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = monthNames[d.getMonth()];
+    monthlyMap[key] = { month: label, collectedAmt: 0, pendingAmt: 0 };
+  }
+
+  feeRecords.forEach((r) => {
+    const m = r.month;
+    if (m && monthlyMap[m]) {
+      const amt = Number(r.amount || 0);
+      const paid = Number(r.paid || 0);
+      monthlyMap[m].collectedAmt += paid;
+      monthlyMap[m].pendingAmt += Math.max(0, amt - paid);
+    }
+  });
+
+  const monthlyOverview = Object.values(monthlyMap).map((m) => {
+    const total = m.collectedAmt + m.pendingAmt;
+    const rate = total > 0 ? Math.round((m.collectedAmt / total) * 100) : 0;
+    return {
+      month: m.month,
+      // Values in Lakhs or Thousands formatted cleanly
+      collected: Number((m.collectedAmt / 100000).toFixed(2)),
+      pending: Number((m.pendingAmt / 100000).toFixed(2)),
+      rate,
+    };
+  });
+
+  // 5. Extract Recent Collections directly from FeeRecord.payments array
+  const recentCollections = [];
+  feeRecords.forEach((r) => {
+    const sName = r.student?.name || 'Student';
+    const cName = r.student?.course?.name || r.student?.batch?.name || 'Class';
+    if (Array.isArray(r.payments) && r.payments.length > 0) {
+      r.payments.forEach((p) => {
+        recentCollections.push({
+          receiptNo: p.receiptNo || `RCP-${String(r._id).slice(-5).toUpperCase()}`,
+          name: sName,
+          class: cName,
+          amount: p.amount || 0,
+          mode: p.mode || 'Cash',
+          date: p.date ? new Date(p.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent',
+          rawDate: p.date ? new Date(p.date).getTime() : 0,
+        });
+      });
+    } else if (r.paid > 0) {
+      recentCollections.push({
+        receiptNo: `RCP-${String(r._id).slice(-5).toUpperCase()}`,
+        name: sName,
+        class: cName,
+        amount: r.paid,
+        mode: 'Online',
+        date: r.updatedAt ? new Date(r.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent',
+        rawDate: r.updatedAt ? new Date(r.updatedAt).getTime() : 0,
+      });
+    }
+  });
+
+  // Sort recent payments newest first and limit to top 8
+  recentCollections.sort((a, b) => b.rawDate - a.rawDate);
+  const topRecentCollections = recentCollections.slice(0, 8);
+
+  // 6. Compute Real Due Alerts
+  const sevenDaysFromNow = new Date();
+  sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+  let dueIn7Days = 0;
+  let overdue = 0;
+  let partiallyPaid = 0;
+
+  feeRecords.forEach((r) => {
+    const due = Math.max(0, (r.amount || 0) - (r.paid || 0));
+    if (due > 0) {
+      if (r.paid > 0) {
+        partiallyPaid++;
+      }
+      if (r.dueDate) {
+        const dDate = new Date(r.dueDate);
+        if (dDate < now) {
+          overdue++;
+        } else if (dDate <= sevenDaysFromNow) {
+          dueIn7Days++;
+        }
+      }
+    }
+  });
+
   const dueAlerts = {
-    dueIn7Days: 28,
-    overdue: 46,
-    partiallyPaid: 19,
+    dueIn7Days,
+    overdue,
+    partiallyPaid,
   };
 
-  // Fee Structure Plans
-  const feeStructures = [
-    { class: 'Class 6 - 8 (Middle School)', tuition: 25000, exam: 2500, lab: 1500, total: 29000, frequency: 'Quarterly' },
-    { class: 'Class 9 - 10 (Secondary)', tuition: 32000, exam: 3500, lab: 2500, total: 38000, frequency: 'Quarterly' },
-    { class: 'Class 11 - 12 (Science Stream)', tuition: 45000, exam: 4500, lab: 6000, total: 55500, frequency: 'Half-Yearly' },
-    { class: 'Class 11 - 12 (Commerce Stream)', tuition: 40000, exam: 4000, lab: 2000, total: 46000, frequency: 'Half-Yearly' },
-  ];
+  // 7. Dynamic Fee Structures from Active Courses
+  const feeStructures = courses.map((c) => {
+    const primaryPlan = c.fees && c.fees.length > 0 ? c.fees[0] : null;
+    const tuition = primaryPlan?.amount || 0;
+    const exam = Math.round(tuition * 0.1);
+    const lab = Math.round(tuition * 0.05);
+    const total = tuition + exam + lab;
+
+    return {
+      class: c.name,
+      tuition,
+      exam,
+      lab,
+      total: total || tuition,
+      frequency: primaryPlan?.plan ? primaryPlan.plan.replace('_', ' ') : 'Annual',
+    };
+  });
 
   return NextResponse.json({
     kpis: {
@@ -59,11 +163,10 @@ export const GET = wrap(async () => {
       pendingFees,
     },
     monthlyOverview,
-    recentCollections,
+    recentCollections: topRecentCollections,
     dueAlerts,
     feeStructures,
   });
 });
 
 export const dynamic = 'force-dynamic';
-
