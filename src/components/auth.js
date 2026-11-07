@@ -1,54 +1,49 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { GraduationCap, Zap, Check, Eye, EyeOff, ArrowRight, Users, Star, BarChart3 } from 'lucide-react';
+import { Check, Eye, EyeOff, ArrowRight, Users, GraduationCap, MessageCircle, Star } from 'lucide-react';
+import Logo from '@/components/landing/Logo';
 
 const POINTS = [
-  'Student & Admission Management',
-  'Class & Batch Scheduling',
-  'Attendance Tracking',
-  'Fees & Payment Collection',
-  'Parent Communication (WhatsApp/SMS)',
-  'Reports & Analytics',
+  'Student & admission management',
+  'Automated fee receipts & reminders',
+  'Smart attendance tracking',
+  'Instant WhatsApp notifications to parents',
+  'Teachers, batches & payroll reports',
 ];
 
 const STATS = [
-  [Users, 'text-violet-600', '500+', 'Institutes Trust Us'],
-  [Star, 'text-amber-400', '50,000+', 'Students Managed'],
-  [BarChart3, 'text-violet-600', '99.9%', 'Uptime & Reliability'],
+  [Users, '1,000+', 'Institutes'],
+  [GraduationCap, '5,00,000+', 'Students'],
+  [MessageCircle, '1 Cr+', 'WhatsApp Sent'],
+  [Star, '99.9%', 'Reliability'],
 ];
 
-export function Logo({ className = 'text-[28px]' }) {
-  return (
-    <Link href="/" className={`flex items-center gap-2.5 font-extrabold tracking-tight text-slate-900 ${className}`}>
-      <GraduationCap className="h-[1.3em] w-[1.3em] fill-violet-600 text-violet-700" strokeWidth={1.8} />
-      <span>EduManage</span>
-    </Link>
-  );
-}
+export { Logo };
 
-/* Pill input with left icon. type="password" gets an eye toggle automatically.
-   Pass `label` (+ required / optional) to show a label above the pill. */
+/* Modern clean input matching landing theme */
 export function Input({ icon: Icon, label, required, optional, compact, type = 'text', ...props }) {
   const [show, setShow] = useState(false);
   const isPw = type === 'password';
-  const size = compact ? 'h-12 pl-12 pr-12 text-[15px]' : 'h-14 pl-14 pr-14 text-[16px]';
+  const heightClass = compact ? 'h-11' : 'h-12';
 
   const field = (
     <div className="relative">
-      <Icon className={`pointer-events-none absolute top-1/2 h-5 w-5 -translate-y-1/2 text-slate-800 ${compact ? 'left-4' : 'left-5'}`} />
+      {Icon && (
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+      )}
       <input
         {...props}
         required={required}
         type={isPw && show ? 'text' : type}
-        className={`${size} w-full rounded-full border border-slate-200 bg-white text-slate-800 outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-4 focus:ring-violet-100`}
+        className={`${heightClass} w-full rounded-xl border border-slate-200 bg-white ${Icon ? 'pl-11' : 'pl-4'} ${isPw ? 'pr-11' : 'pr-4'} text-[15px] text-navy outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-royal focus:ring-4 focus:ring-royal/10`}
       />
       {isPw && (
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
           aria-label={show ? 'Hide password' : 'Show password'}
-          className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-800 transition hover:text-violet-700"
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-navy"
         >
           {show ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
         </button>
@@ -59,7 +54,7 @@ export function Input({ icon: Icon, label, required, optional, compact, type = '
   if (!label) return field;
   return (
     <label className="block">
-      <span className="mb-1.5 ml-4 block text-[13px] font-semibold text-slate-700">
+      <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">
         {label}
         {required && <span className="text-rose-500"> *</span>}
         {optional && <span className="font-normal text-slate-400"> (optional)</span>}
@@ -71,9 +66,9 @@ export function Input({ icon: Icon, label, required, optional, compact, type = '
 
 export function Heading({ title, sub }) {
   return (
-    <div className="mt-7">
-      <h2 className="text-[32px] font-extrabold leading-tight tracking-tight text-slate-900 sm:text-[34px]">{title}</h2>
-      <p className="mt-1 text-[16px] text-slate-500 sm:text-[17px]">{sub}</p>
+    <div className="mt-6">
+      <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-navy sm:text-[30px]">{title}</h2>
+      <p className="mt-1.5 text-[15px] text-slate-600">{sub}</p>
     </div>
   );
 }
@@ -83,66 +78,77 @@ export function SubmitButton({ busy, busyText = 'Please wait…', children }) {
     <button
       type="submit"
       disabled={busy}
-      className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-800 via-violet-700 to-violet-600 text-[19px] font-bold text-white shadow-lg shadow-violet-500/40 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+      className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-royal text-[15px] font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
     >
       {busy ? busyText : (
         <>
           {children}
-          <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+          <ArrowRight className="h-4 w-4" />
         </>
       )}
     </button>
   );
 }
 
-/* Full page: background, navbar, left hero, and the right-hand form card. */
+const Flag = () => (
+  <svg width="20" height="14" viewBox="0 0 22 15" className="rounded-[2px] ring-1 ring-black/10" aria-hidden="true">
+    <rect width="22" height="5" fill="#ff9933" />
+    <rect y="5" width="22" height="5" fill="#fff" />
+    <rect y="10" width="22" height="5" fill="#138808" />
+    <circle cx="11" cy="7.5" r="1.8" fill="none" stroke="#000080" strokeWidth=".7" />
+  </svg>
+);
+
+const Squiggle = () => (
+  <svg className="absolute -bottom-2.5 left-0 h-3 w-full" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M2 8 C 30 2, 60 12, 100 6 S 170 3, 198 7" stroke="#1f5fe0" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+  </svg>
+);
+
+/* Full auth layout matching landing page branding */
 export function AuthShell({ onSubmit, wide = false, children }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#ece6ff]">
-      {/* Illustration goes at /public/auth-hero.jpg; gradient shows if it is missing */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url('/auth-hero.jpg'), linear-gradient(135deg,#f5f0ff 0%,#e6deff 50%,#d5e0ff 100%)` }}
-      />
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-white/60 via-white/10 to-violet-200/30" />
-
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1440px] flex-col px-5 sm:px-8 lg:px-14">
-        <header className="flex items-center justify-between py-5 lg:py-6">
-          <Logo />
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-r from-white via-[#f4f8ff] to-[#e9f1ff] font-sans text-navy">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1240px] flex-col px-5 sm:px-8">
+        {/* Top bar with landing logo */}
+        <header className="flex h-16 items-center justify-between py-4">
+          <Link href="/" aria-label="EduManage home">
+            <Logo />
+          </Link>
+          <Link
+            href="/"
+            className="text-sm font-semibold text-slate-600 transition hover:text-royal"
+          >
+            ← Back to Home
+          </Link>
         </header>
 
-        <main className="grid flex-1 items-center gap-10 py-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6 lg:pb-10">
-          {/* Left hero */}
-          <section className="hidden flex-col self-stretch lg:flex">
-            <div className="my-auto">
-              <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-100/80 px-4 py-2 text-[15px] font-semibold text-slate-900">
-                <Zap className="h-4 w-4 fill-amber-400 text-amber-400" />
-                All-in-One Institute Management
+        <main className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:py-12">
+          {/* Left hero info - matching landing page design */}
+          <section className="hidden flex-col justify-center lg:flex">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[13px] font-medium shadow-sm ring-1 ring-slate-200">
+                <Flag />
+                Built for coaching institutes in India
               </span>
 
-              <h1 className="mt-7 text-[52px] font-extrabold leading-[1.1] tracking-tight text-slate-900 xl:text-[58px]">
-                Manage Students,
-                <br />
-                Classes, Fees &amp; More
-                <br />
-                <span className="relative inline-block text-violet-600">
-                  Effortlessly
-                  <svg className="absolute -bottom-3 left-3 w-[75%]" viewBox="0 0 220 14" fill="none" aria-hidden>
-                    <path d="M3 10C55 3 130 2 217 7" stroke="#FBBF24" strokeWidth="4.5" strokeLinecap="round" />
-                  </svg>
+              <h1 className="mt-6 text-[42px] font-extrabold leading-[1.12] tracking-tight text-navy xl:text-[46px]">
+                Run your coaching institute without{' '}
+                <span className="relative inline-block text-royal">
+                  the chaos
+                  <Squiggle />
                 </span>
               </h1>
 
-              <p className="mt-10 max-w-md text-[19px] leading-relaxed text-slate-500">
-                A complete institute management platform for coaching centers, tutoring businesses and learning academies.
+              <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-slate-600">
+                Admissions, fees, attendance, teachers and parent updates on WhatsApp, all in one simple dashboard.
               </p>
 
-              <ul className="mt-8 space-y-3.5">
+              <ul className="mt-7 space-y-3">
                 {POINTS.map((p) => (
-                  <li key={p} className="flex items-center gap-3.5 text-[16px] font-medium text-slate-900">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
-                      <Check className="h-4 w-4" strokeWidth={3.5} />
+                  <li key={p} className="flex items-center gap-3 text-[15px] font-medium text-slate-700">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
                     </span>
                     {p}
                   </li>
@@ -150,14 +156,12 @@ export function AuthShell({ onSubmit, wide = false, children }) {
               </ul>
             </div>
 
-            <div className="mt-10 flex w-fit items-center rounded-[32px] bg-white/85 px-7 py-5 shadow-xl shadow-violet-300/30 backdrop-blur-xl">
-              {STATS.map(([Icon, color, value, label], i) => (
-                <div key={label} className={`flex items-center gap-3.5 ${i ? 'ml-7 border-l border-slate-200 pl-7' : ''}`}>
-                  <Icon className={`h-9 w-9 ${color}`} strokeWidth={1.6} />
-                  <div>
-                    <div className="text-[26px] font-extrabold leading-none text-slate-900">{value}</div>
-                    <div className="mt-1 text-[14px] text-slate-600">{label}</div>
-                  </div>
+            {/* Stats bar */}
+            <div className="mt-10 grid grid-cols-4 gap-4 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm backdrop-blur">
+              {STATS.map(([Icon, value, label]) => (
+                <div key={label}>
+                  <div className="text-[20px] font-extrabold text-navy">{value}</div>
+                  <div className="mt-0.5 text-xs font-medium text-slate-500">{label}</div>
                 </div>
               ))}
             </div>
@@ -167,16 +171,12 @@ export function AuthShell({ onSubmit, wide = false, children }) {
           <section className="flex justify-center lg:justify-end">
             <form
               onSubmit={onSubmit}
-              className={`relative w-full overflow-hidden rounded-[40px] bg-white/95 p-8 shadow-[0_30px_80px_-20px_rgba(91,33,182,0.4)] backdrop-blur-xl sm:p-10 ${wide ? 'max-w-[580px]' : 'max-w-[470px]'}`}
+              className={`w-full rounded-2xl border border-slate-200/80 bg-white p-7 shadow-xl shadow-blue-900/5 sm:p-9 ${wide ? 'max-w-[560px]' : 'max-w-[460px]'}`}
             >
-              <span aria-hidden className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-gradient-to-br from-violet-400 to-violet-700" />
-              <span aria-hidden className="pointer-events-none absolute -right-14 -top-[6.5rem] h-44 w-44 rounded-full bg-white" />
-              <div className="relative">
-                <div className="flex justify-center">
-                  <Logo className="text-[26px]" />
-                </div>
-                {children}
+              <div className="flex justify-center">
+                <Logo />
               </div>
+              {children}
             </form>
           </section>
         </main>

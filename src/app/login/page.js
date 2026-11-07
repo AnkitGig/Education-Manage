@@ -40,24 +40,24 @@ export default function Login() {
 
       {!setup && (
         <div className="mt-5 flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-3 text-[15px] font-medium text-slate-900">
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-slate-700">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="h-5 w-5 rounded-md border-slate-300 text-violet-600 focus:ring-violet-300"
+              className="h-4 w-4 rounded border-slate-300 text-royal focus:ring-royal/20"
             />
             Remember me
           </label>
-          <Link href="/forgot-password" className="text-[15px] font-bold text-violet-700 hover:underline">Forgot password?</Link>
+          <Link href="/signup" className="text-sm font-semibold text-royal hover:underline">Need help?</Link>
         </div>
       )}
 
       <SubmitButton busy={busy}>{setup ? 'Create account' : 'Sign In'}</SubmitButton>
 
-      <p className="mt-8 text-center text-[15px] text-slate-600">
+      <p className="mt-7 text-center text-sm text-slate-600">
         {setup ? 'This first account becomes the institute admin.' : (
-          <>New to EduManage? <Link href="/signup" className="ml-1 font-bold text-violet-700 hover:underline">Create an account</Link></>
+          <>Don&apos;t have an account? <Link href="/signup" className="ml-1 font-semibold text-royal hover:underline">Get started free</Link></>
         )}
       </p>
     </AuthShell>

@@ -73,7 +73,7 @@ export default async function Landing() {
   const cta = session ? ['/dashboard', 'Open dashboard'] : ['/login', 'Get started free'];
 
   return (
-    <div className="overflow-x-hidden bg-white font-sans text-navy">
+    <div className="overflow-x-hidden bg-white font-sans text-navy pt-16">
       <LandingNav loggedIn={!!session} />
 
       {/* HERO */}

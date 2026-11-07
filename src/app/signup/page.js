@@ -80,9 +80,9 @@ export default function Signup() {
 
       <SubmitButton busy={busy} busyText="Creating account…">Sign up now</SubmitButton>
 
-      <p className="mt-6 text-center text-[15px] text-slate-600">
+      <p className="mt-6 text-center text-sm text-slate-600">
         Already have an account?{' '}
-        <Link href="/login" className="ml-1 font-bold text-violet-700 hover:underline">Sign in</Link>
+        <Link href="/login" className="ml-1 font-semibold text-royal hover:underline">Log in</Link>
       </p>
 
       <p className="mt-3 text-center text-xs text-slate-400">
