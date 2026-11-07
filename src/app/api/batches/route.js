@@ -31,21 +31,35 @@ export const GET = wrap(async (req) => {
   });
   if (sp.get('day')) q.days = sp.get('day');
 
-  const [batches, sc] = await Promise.all([
+  const [rawBatches, sc, allTeachers] = await Promise.all([
     Batch.find(q)
       .sort({ createdAt: 1 })
       .populate('course', 'name board')
-      .populate('teacher', 'name staffId role photo phone email')
       .lean(),
     Student.aggregate([
       { $match: { status: { $ne: 'inactive' } } },
       { $group: { _id: '$batch', n: { $sum: 1 } } },
     ]),
+    Staff.find({ type: 'Teaching' }).select('name staffId role photo phone email').lean(),
   ]);
 
+  const teacherMap = Object.fromEntries(allTeachers.map((t) => [String(t._id), t]));
   const S = Object.fromEntries(sc.map((x) => [String(x._id), x.n]));
+
+  const batches = rawBatches.map((b) => {
+    let populatedTeacher = null;
+    if (b.teacher) {
+      populatedTeacher = teacherMap[String(b.teacher)] || null;
+    }
+    return {
+      ...b,
+      teacher: populatedTeacher,
+      students: S[b._id] || 0,
+    };
+  });
+
   return NextResponse.json({
-    data: batches.map((b) => ({ ...b, students: S[b._id] || 0 })),
+    data: batches,
   });
 });
 

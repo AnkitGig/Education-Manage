@@ -22,9 +22,12 @@ export const GET = wrap(async (req, { params }) => {
   await connectDB();
   const batch = await Batch.findById(params.id)
     .populate('course', 'name')
-    .populate('teacher', 'name staffId role photo')
     .lean();
   if (!batch) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (batch.teacher) {
+    const teacher = await Staff.findById(batch.teacher).select('name staffId role photo').lean();
+    batch.teacher = teacher || null;
+  }
   return NextResponse.json(batch);
 });
 

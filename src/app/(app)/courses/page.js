@@ -116,10 +116,11 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
   const teachers = staffData?.data || [];
 
   const [f, setF] = useState(null);
+  const defaultTeacherId = initial?.teacher?._id || (typeof initial?.teacher === 'string' ? initial.teacher : '');
   const v =
     f || {
       name: initial?.name || '',
-      teacher: initial?.teacher?._id || initial?.teacher || '',
+      teacher: defaultTeacherId,
       startTime: initial?.startTime || '08:00',
       endTime: initial?.endTime || '14:00',
       days: initial?.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -136,11 +137,11 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
   const subj = (d) => v.timetable?.find((t) => t.day === d)?.subject || '';
 
   const save = async () => {
-    const teacherId = v.teacher?._id || (typeof v.teacher === 'string' && v.teacher ? v.teacher : null);
+    const teacherId = typeof v.teacher === 'object' && v.teacher?._id ? v.teacher._id : v.teacher;
     const body = {
       name: v.name,
       course: initial?.course?._id || initial?.course || courseId,
-      teacher: teacherId || null,
+      teacher: teacherId ? String(teacherId) : null,
       startTime: v.startTime || '08:00',
       endTime: v.endTime || '14:00',
       room: v.room || '',
@@ -172,7 +173,7 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
         <Field label="Class Teacher (Assigned from Staff)">
           <select
             className="inp"
-            value={v.teacher?._id || v.teacher || ''}
+            value={typeof v.teacher === 'object' && v.teacher?._id ? v.teacher._id : v.teacher || ''}
             onChange={(e) => setF({ ...v, teacher: e.target.value })}
           >
             <option value="">Unassigned</option>
