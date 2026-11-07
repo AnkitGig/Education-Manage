@@ -51,20 +51,29 @@ export const PageHeader = ({ icon: Icon, title, sub, children }) => (
 );
 
 const STAT = {
-  purple: ['from-violet-500 to-indigo-600', 'bg-violet-500/10'], blue: ['from-sky-500 to-blue-600', 'bg-sky-500/10'],
-  green: ['from-emerald-400 to-teal-600', 'bg-emerald-500/10'], red: ['from-rose-400 to-red-500', 'bg-rose-500/10'], orange: ['from-amber-400 to-orange-500', 'bg-orange-500/10'],
+  purple: ['from-violet-500 to-indigo-600', 'bg-violet-500/10'],
+  blue: ['from-sky-500 to-blue-600', 'bg-sky-500/10'],
+  green: ['from-emerald-400 to-teal-600', 'bg-emerald-500/10'],
+  red: ['from-rose-400 to-red-500', 'bg-rose-500/10'],
+  orange: ['from-amber-400 to-orange-500', 'bg-orange-500/10'],
+  yellow: ['from-amber-400 to-amber-500', 'bg-amber-500/10'],
 };
-export const Stat = ({ icon: Icon, label, value, sub, tone = 'purple', subTone }) => (
-  <div className="card relative min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-pop">
-    <span className={cn('absolute -right-7 -top-7 h-24 w-24 rounded-full', STAT[tone][1])} />
-    <div className="relative flex items-start justify-between gap-3">
-      <div className="min-w-0 pt-0.5 text-[13px] font-medium leading-snug text-ink-500">{label}</div>
-      <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md', STAT[tone][0])}><Icon className="h-5 w-5" /></span>
+export const Stat = ({ icon: Icon, label, value, sub, tone = 'purple', subTone }) => {
+  const t = STAT[tone] || STAT.purple;
+  return (
+    <div className="card relative min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-pop">
+      <span className={cn('absolute -right-7 -top-7 h-24 w-24 rounded-full', t[1])} />
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="min-w-0 pt-0.5 text-[13px] font-medium leading-snug text-ink-500">{label}</div>
+        <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md', t[0])}>
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <div className="relative mt-3 text-[22px] font-extrabold leading-none tracking-tight text-ink sm:text-2xl">{value}</div>
+      {sub && <div className={cn('relative mt-1.5 truncate text-xs font-medium', subTone || 'text-ink-500')}>{sub}</div>}
     </div>
-    <div className="relative mt-3 text-[22px] font-extrabold leading-none tracking-tight text-ink sm:text-2xl">{value}</div>
-    {sub && <div className={cn('relative mt-1.5 truncate text-xs font-medium', subTone || 'text-ink-500')}>{sub}</div>}
-  </div>
-);
+  );
+};
 
 export const Empty = ({ icon: Icon = Inbox, title = 'Nothing here yet', hint, action }) => (
   <div className="flex flex-col items-center px-4 py-10 text-center">

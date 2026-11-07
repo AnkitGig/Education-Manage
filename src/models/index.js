@@ -13,3 +13,6 @@ import './Notice';
 import './Message';
 import './Template';
 import './Institute';
+import './Staff';
+import './StaffAttendance';
+import './StaffLeave';
