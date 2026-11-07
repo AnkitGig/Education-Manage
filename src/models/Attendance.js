@@ -4,7 +4,7 @@ const S = new mongoose.Schema(
   {
     batch: { type: ObjectId, ref: 'Batch', required: true },
     date: { type: String, required: true }, // YYYY-MM-DD
-    records: [{ student: { type: ObjectId, ref: 'Student' }, status: { type: String, enum: ['present', 'absent', 'late'] }, _id: false }],
+    records: [{ student: { type: ObjectId, ref: 'Student' }, status: { type: String, enum: ['present', 'absent', 'late', 'halfday'] }, _id: false }],
   },
   { timestamps: true }
 );
