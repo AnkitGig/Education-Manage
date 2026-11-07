@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -19,9 +19,12 @@ import {
   CheckCircle2,
   XCircle,
   Plus,
-  Upload
+  Upload,
+  Download,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
-import { useApi, api, run, fmtDate } from '@/lib/client';
+import { useApi, api, run, fmtDate, upload } from '@/lib/client';
 import { StatusBadge, Badge, Avatar, Card, Spinner, Modal, Field, inr } from '@/components/ui';
 
 export default function StaffDetailPage() {
@@ -29,6 +32,10 @@ export default function StaffDetailPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview'); // overview, attendance, leaves, documents
   const [editModal, setEditModal] = useState(false);
+  const [uploadModal, setUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [docTitle, setDocTitle] = useState('ID Proof (Aadhar/PAN)');
+  const fileInputRef = useRef(null);
 
   const { data: staff, isLoading, mutate } = useApi(`/api/staff/${id}`);
 
@@ -44,6 +51,35 @@ export default function StaffDetailPage() {
     if (!confirm(`Are you sure you want to delete ${staff.name}? This action cannot be undone.`)) return;
     const ok = await run(() => api(`/api/staff/${id}`, 'DELETE'), 'Staff member deleted successfully');
     if (ok) router.push('/staff');
+  };
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+      alert('Please select a file to upload');
+      return;
+    }
+
+    setUploading(true);
+    const res = await run(() => upload(file, 'staff_docs'), 'File uploaded successfully');
+    if (res?.url) {
+      const existingDocs = staff.documents || [];
+      const updatedDocs = [
+        ...existingDocs,
+        {
+          title: docTitle,
+          docType: docTitle,
+          fileUrl: res.url,
+          uploadedAt: new Date(),
+        },
+      ];
+
+      await run(() => api(`/api/staff/${id}`, 'PUT', { documents: updatedDocs }));
+      setUploadModal(false);
+      mutate();
+    }
+    setUploading(false);
   };
 
   const att = staff.attendanceStats || { present: 0, absent: 0, halfDay: 0, total: 0, percent: 95 };
@@ -347,21 +383,138 @@ export default function StaffDetailPage() {
         <Card
           title="Uploaded Documents"
           action={
-            <button className="btn-outline h-9 text-xs">
+            <button
+              onClick={() => setUploadModal(true)}
+              className="btn-outline h-9 text-xs flex items-center gap-1.5"
+            >
               <Upload className="h-3.5 w-3.5" /> Upload File
             </button>
           }
         >
+          {/* Default categories + real uploaded documents */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {['ID Proof (Aadhar/PAN)', 'Degree Certificate', 'Appointment Letter', 'Police Verification'].map((d) => (
-              <div key={d} className="rounded-xl border border-ink/[.06] bg-brand-50/20 p-4">
-                <FileText className="h-6 w-6 text-brand-600" />
-                <div className="mt-2 text-sm font-bold text-ink">{d}</div>
-                <div className="text-xs text-emerald-600 font-medium mt-0.5">Verified on file</div>
-              </div>
-            ))}
+            {['ID Proof (Aadhar/PAN)', 'Degree Certificate', 'Appointment Letter', 'Police Verification'].map((d) => {
+              const uploadedDoc = (staff.documents || []).find((doc) => doc.title === d || doc.docType === d);
+              return (
+                <div key={d} className="rounded-xl border border-ink/[.06] bg-brand-50/20 p-4 flex flex-col justify-between">
+                  <div>
+                    <FileText className="h-6 w-6 text-brand-600" />
+                    <div className="mt-2 text-sm font-bold text-ink">{d}</div>
+                    <div className="text-xs text-emerald-600 font-medium mt-0.5">
+                      {uploadedDoc ? 'Uploaded & Verified' : 'Standard Document'}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-ink/[.06] flex items-center justify-between text-xs">
+                    {uploadedDoc?.fileUrl ? (
+                      <a
+                        href={uploadedDoc.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-brand-600 hover:underline flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" /> View / Download
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setDocTitle(d);
+                          setUploadModal(true);
+                        }}
+                        className="text-brand-600 font-semibold hover:underline"
+                      >
+                        + Upload Now
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Additional Custom Uploaded Documents */}
+            {(staff.documents || [])
+              .filter(
+                (doc) =>
+                  !['ID Proof (Aadhar/PAN)', 'Degree Certificate', 'Appointment Letter', 'Police Verification'].includes(doc.title)
+              )
+              .map((doc, idx) => (
+                <div key={idx} className="rounded-xl border border-ink/[.06] bg-brand-50/20 p-4 flex flex-col justify-between">
+                  <div>
+                    <FileText className="h-6 w-6 text-brand-600" />
+                    <div className="mt-2 text-sm font-bold text-ink">{doc.title}</div>
+                    <div className="text-xs text-emerald-600 font-medium mt-0.5">Uploaded File</div>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-ink/[.06] text-xs">
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-brand-600 hover:underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" /> View Document
+                    </a>
+                  </div>
+                </div>
+              ))}
           </div>
         </Card>
+      )}
+
+      {/* Upload Document Modal */}
+      {uploadModal && (
+        <Modal open={uploadModal} onClose={() => setUploadModal(false)} title="Upload Staff Document" width="max-w-md">
+          <form onSubmit={handleFileUpload} className="space-y-4">
+            <Field label="Document Title / Type" required>
+              <select
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+                className="inp"
+              >
+                <option value="ID Proof (Aadhar/PAN)">ID Proof (Aadhar/PAN)</option>
+                <option value="Degree Certificate">Degree Certificate</option>
+                <option value="Appointment Letter">Appointment Letter</option>
+                <option value="Police Verification">Police Verification</option>
+                <option value="Experience Certificate">Experience Certificate</option>
+                <option value="Other Document">Other Document</option>
+              </select>
+            </Field>
+
+            <Field label="Select File (PDF, JPG, PNG)" required>
+              <input
+                ref={fileInputRef}
+                type="file"
+                required
+                accept="image/*,.pdf,.doc,.docx"
+                className="inp py-1.5"
+              />
+            </Field>
+
+            <div className="mt-5 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setUploadModal(false)}
+                className="btn border border-ink/10"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={uploading}
+                className="btn-primary"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" /> Upload &amp; Save
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Edit Modal */}
@@ -437,4 +590,3 @@ export default function StaffDetailPage() {
     </div>
   );
 }
-
