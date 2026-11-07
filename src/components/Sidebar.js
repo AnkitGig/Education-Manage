@@ -8,7 +8,7 @@ import { cn, inr } from './ui';
 
 const GROUPS = [
   ['Overview', [['/dashboard', 'Dashboard', LayoutDashboard]]],
-  ['Academics', [['/students', 'Students', Users], ['/courses', 'Courses & Batches', BookOpen], ['/attendance', 'Attendance', CalendarCheck], ['/staff', 'Staff Management', UserCog]]],
+  ['Academics', [['/students', 'Students', Users], ['/courses', 'Classes & Sections', BookOpen], ['/attendance', 'Attendance', CalendarCheck], ['/staff', 'Staff Management', UserCog]]],
   ['Finance', [['/fees', 'Fees & Payments', Wallet], ['/salary', 'Salary & Expenses', Banknote], ['/reports', 'Reports', BarChart3]]],
   ['Communication', [['/whatsapp', 'WhatsApp Messages', MessageCircle], ['/notices', 'Notices & Announcements', Bell]]],
   ['System', [['/settings', 'Settings', Settings]]],

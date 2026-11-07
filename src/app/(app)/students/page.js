@@ -44,8 +44,8 @@ function Students() {
           <Tabs value={f.status} onChange={(v) => set({ status: v })} tabs={[['all', `All Students (${st.total ?? 0})`], ['active', `Active (${st.active ?? 0})`], ['onhold', `On Hold (${st.onhold ?? 0})`], ['inactive', `Inactive (${st.inactive ?? 0})`]]} />
           <div className="my-4 flex flex-wrap gap-3">
             <div className="relative min-w-52 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input className="inp pl-9" placeholder="Search by name, phone or ID…" value={f.q} onChange={(e) => set({ q: e.target.value })} /></div>
-            <select className="inp w-auto" value={f.course} onChange={(e) => set({ course: e.target.value, batch: '' })}><option value="">All Courses</option>{courses?.data.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</select>
-            <select className="inp w-auto" value={f.batch} onChange={(e) => set({ batch: e.target.value })}><option value="">All Batches</option>{batches?.data.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}</select>
+            <select className="inp w-auto" value={f.course} onChange={(e) => set({ course: e.target.value, batch: '' })}><option value="">All Classes</option>{courses?.data.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</select>
+            <select className="inp w-auto" value={f.batch} onChange={(e) => set({ batch: e.target.value })}><option value="">All Sections</option>{batches?.data.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}</select>
           </div>
           <Table loading={isLoading} rows={data?.data} activeId={sel?._id} onRowClick={(s) => setSel(s)} cols={[
             { h: '#', render: (_, i) => (f.page - 1) * limit + i + 1 },

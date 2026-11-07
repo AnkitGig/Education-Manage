@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, Upload, Trash2, Paperclip, FileText, Check } fro
 import { useApi, api, run, upload, toast } from '@/lib/client';
 import { Field, Card, cn, inr, Avatar } from './ui';
 
-const STEPS = ['Student Details', 'Course & Batch', 'Fee Plan', 'Review & Save'];
+const STEPS = ['Student Details', 'Class & Section', 'Fee Plan', 'Review & Save'];
 const PLANS = [['monthly', 'Monthly', 1], ['quarterly', 'Quarterly', 3], ['half_yearly', 'Half Yearly', 6], ['yearly', 'Yearly', 12]];
 const EMPTY = { name: '', dob: '', gender: 'Male', bloodGroup: '', mobile: '', parentName: '', parentRelation: 'Father', parentMobile: '', email: '', address: '', photo: null, documents: [], course: '', batch: '', feePlan: 'monthly', feeAmount: 0, status: 'active' };
 
@@ -105,13 +105,39 @@ export default function StudentForm({ initial }) {
       )}
 
       {step === 1 && (
-        <Card title="Course & Batch" className="max-w-2xl">
+        <Card title="Class & Section Allocation" className="max-w-2xl">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Course" required><select className="inp" value={f.course} onChange={(e) => setF({ ...f, course: e.target.value, batch: '', feeAmount: 0 })}><option value="">Select course</option>{courses?.data.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}</select></Field>
-            <Field label="Batch" required><select className="inp" value={f.batch} onChange={set('batch')} disabled={!f.course}><option value="">Select batch</option>{batches?.data.map((b) => <option key={b._id} value={b._id}>{b.name}</option>)}</select></Field>
-            <Field label="Status"><select className="inp" value={f.status} onChange={set('status')}><option value="active">Active</option><option value="onhold">On Hold</option><option value="inactive">Inactive</option></select></Field>
+            <Field label="Class" required>
+              <select className="inp" value={f.course} onChange={(e) => setF({ ...f, course: e.target.value, batch: '', feeAmount: 0 })}>
+                <option value="">Select Class</option>
+                {courses?.data.map((c) => (
+                  <option key={c._id} value={c._id}>{c.name}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Section" required>
+              <select className="inp" value={f.batch} onChange={set('batch')} disabled={!f.course}>
+                <option value="">Select Section</option>
+                {batches?.data.map((b) => (
+                  <option key={b._id} value={b._id}>
+                    {b.name} {b.teacher?.name ? `(Class Teacher: ${b.teacher.name})` : ''}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Enrollment Status">
+              <select className="inp" value={f.status} onChange={set('status')}>
+                <option value="active">Active</option>
+                <option value="onhold">On Hold</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </Field>
           </div>
-          {courses && !courses.data.length && <p className="mt-3 text-sm text-amber-600">Create a course and batch first in <Link href="/courses" className="underline">Courses & Batches</Link>.</p>}
+          {courses && !courses.data.length && (
+            <p className="mt-3 text-sm text-amber-600">
+              Create a class and section first in <Link href="/courses" className="underline font-semibold">Classes & Sections</Link>.
+            </p>
+          )}
         </Card>
       )}
 

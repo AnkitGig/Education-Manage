@@ -76,8 +76,10 @@ export default function StaffManagementPage() {
   const { data, isLoading, mutate } = useApi(`/api/staff?${query}`);
   const { data: attendanceData, mutate: refreshAttendance } = useApi('/api/staff/attendance');
   const { data: leavesData, mutate: refreshLeaves } = useApi('/api/staff/leaves');
+  const { data: batchesData } = useApi('/api/batches');
 
   const staffList = data?.data || [];
+  const batchesList = batchesData?.data || [];
   const stats = data?.stats || {
     totalStaff: 0,
     teachersCount: 0,
@@ -426,33 +428,42 @@ export default function StaffManagementPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {staffList.filter((s) => s.type === 'Teaching').map((t) => (
-                  <div key={t._id} className="card p-4 transition hover:-translate-y-0.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-brand-600">{t.staffId}</span>
-                      <StatusBadge s={t.status?.toLowerCase().replace(' ', '') || 'active'} />
-                    </div>
-                    <div className="mt-3 flex items-center gap-3">
-                      <Avatar name={t.name} size={40} />
-                      <div>
-                        <h4 className="font-bold text-ink">{t.name}</h4>
-                        <div className="text-xs text-ink-400">{t.role} • {t.subjects?.join(', ') || 'General'}</div>
+                {staffList.filter((s) => s.type === 'Teaching').map((t) => {
+                  // Direct live lookup of assigned batches from the DB
+                  const assignedFromBatches = batchesList
+                    .filter((b) => b.teacher?._id === t._id || b.teacher === t._id)
+                    .map((b) => (b.course?.name ? `${b.course.name} - ${b.name}` : b.name));
+
+                  const displayedClasses = Array.from(new Set([...(t.assignedClasses || []), ...assignedFromBatches]));
+
+                  return (
+                    <div key={t._id} className="card p-4 transition hover:-translate-y-0.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-brand-600">{t.staffId}</span>
+                        <StatusBadge s={t.status?.toLowerCase().replace(' ', '') || 'active'} />
+                      </div>
+                      <div className="mt-3 flex items-center gap-3">
+                        <Avatar src={t.photo?.url} name={t.name} size={40} />
+                        <div>
+                          <h4 className="font-bold text-ink">{t.name}</h4>
+                          <div className="text-xs text-ink-400">{t.role} • {t.subjects?.join(', ') || 'General'}</div>
+                        </div>
+                      </div>
+                      <div className="mt-3 border-t border-ink/[.06] pt-2.5">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Classes &amp; Sections Assigned</div>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {displayedClasses.length ? (
+                            displayedClasses.map((c) => (
+                              <Badge key={c} tone="purple">{c}</Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-ink-400 italic">No classes assigned</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-3 border-t border-ink/[.06] pt-2.5">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-ink-400">Classes Assigned</div>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {t.assignedClasses?.length ? (
-                          t.assignedClasses.map((c) => (
-                            <Badge key={c} tone="purple">{c}</Badge>
-                          ))
-                        ) : (
-                          <span className="text-xs text-ink-400 italic">No classes assigned</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -521,7 +532,16 @@ export default function StaffManagementPage() {
                   ['Role', sel.role],
                   ['Department', sel.department],
                   ['Subjects', sel.subjects?.join(', ') || '–'],
-                  ['Classes', sel.assignedClasses?.join(', ') || '–'],
+                  [
+                    'Classes & Sections',
+                    (() => {
+                      const fromBatches = batchesList
+                        .filter((b) => b.teacher?._id === sel._id || b.teacher === sel._id)
+                        .map((b) => (b.course?.name ? `${b.course.name} - ${b.name}` : b.name));
+                      const allAssigned = Array.from(new Set([...(sel.assignedClasses || []), ...fromBatches]));
+                      return allAssigned.length ? allAssigned.join(', ') : '–';
+                    })(),
+                  ],
                   ['Monthly Salary', inr(sel.salary)],
                   ['Joining Date', fmtDate(sel.joiningDate)],
                 ].map(([k, v]) => (

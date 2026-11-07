@@ -4,7 +4,7 @@ const S = new mongoose.Schema(
   {
     name: { type: String, required: true },
     course: { type: ObjectId, ref: 'Course', required: true },
-    teacher: { type: ObjectId, ref: 'Teacher' },
+    teacher: { type: ObjectId, ref: 'Staff' },
     startTime: String, // "08:00"
     endTime: String, // "10:00"
     days: [String], // Mon, Tue ...

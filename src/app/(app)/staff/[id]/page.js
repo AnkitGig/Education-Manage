@@ -38,6 +38,8 @@ export default function StaffDetailPage() {
   const fileInputRef = useRef(null);
 
   const { data: staff, isLoading, mutate } = useApi(`/api/staff/${id}`);
+  const { data: batchesData } = useApi(`/api/batches?teacher=${id}`);
+  const assignedFromBatches = (batchesData?.data || []).map((b) => (b.course?.name ? `${b.course.name} - ${b.name}` : b.name));
 
   if (isLoading || !staff) {
     return (
@@ -210,10 +212,10 @@ export default function StaffDetailPage() {
                 </div>
 
                 <div className="rounded-xl border border-ink/[.06] bg-brand-50/30 p-4">
-                  <div className="text-xs font-bold uppercase tracking-wider text-ink-400">Assigned Classes / Batches</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-ink-400">Assigned Classes &amp; Sections</div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {staff.assignedClasses?.length ? (
-                      staff.assignedClasses.map((c) => (
+                    {Array.from(new Set([...(staff.assignedClasses || []), ...assignedFromBatches])).length ? (
+                      Array.from(new Set([...(staff.assignedClasses || []), ...assignedFromBatches])).map((c) => (
                         <Badge key={c} tone="blue">{c}</Badge>
                       ))
                     ) : (
