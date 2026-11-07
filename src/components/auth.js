@@ -1,49 +1,38 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Check, Eye, EyeOff, ArrowRight, Users, GraduationCap, MessageCircle, Star } from 'lucide-react';
+import { Check, Eye, EyeOff } from 'lucide-react';
 import Logo from '@/components/landing/Logo';
 
-const POINTS = [
-  'Student & admission management',
-  'Automated fee receipts & reminders',
-  'Smart attendance tracking',
-  'Instant WhatsApp notifications to parents',
-  'Teachers, batches & payroll reports',
-];
-
-const STATS = [
-  [Users, '1,000+', 'Institutes'],
-  [GraduationCap, '5,00,000+', 'Students'],
-  [MessageCircle, '1 Cr+', 'WhatsApp Sent'],
-  [Star, '99.9%', 'Reliability'],
+const BULLETS = [
+  'Manage Students & Classes',
+  'Track Attendance & Fees',
+  'Grow Your Institute Easily',
 ];
 
 export { Logo };
 
-/* Modern clean input matching landing theme */
 export function Input({ icon: Icon, label, required, optional, compact, type = 'text', ...props }) {
   const [show, setShow] = useState(false);
   const isPw = type === 'password';
-  const heightClass = compact ? 'h-11' : 'h-12';
 
   const field = (
     <div className="relative">
       {Icon && (
-        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <Icon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
       )}
       <input
         {...props}
         required={required}
         type={isPw && show ? 'text' : type}
-        className={`${heightClass} w-full rounded-xl border border-slate-200 bg-white ${Icon ? 'pl-11' : 'pl-4'} ${isPw ? 'pr-11' : 'pr-4'} text-[15px] text-navy outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-royal focus:ring-4 focus:ring-royal/10`}
+        className={`h-12 w-full rounded-xl border border-slate-200 bg-white ${Icon ? 'pl-11' : 'pl-4'} ${isPw ? 'pr-11' : 'pr-4'} text-[15px] text-slate-800 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-royal focus:ring-4 focus:ring-royal/10`}
       />
       {isPw && (
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
           aria-label={show ? 'Hide password' : 'Show password'}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-navy"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
         >
           {show ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
         </button>
@@ -66,9 +55,9 @@ export function Input({ icon: Icon, label, required, optional, compact, type = '
 
 export function Heading({ title, sub }) {
   return (
-    <div className="mt-6">
-      <h2 className="text-[26px] font-extrabold leading-tight tracking-tight text-navy sm:text-[30px]">{title}</h2>
-      <p className="mt-1.5 text-[15px] text-slate-600">{sub}</p>
+    <div className="text-center">
+      <h2 className="text-[28px] font-extrabold tracking-tight text-slate-900 sm:text-[32px]">{title}</h2>
+      {sub && <p className="mt-1.5 text-[15px] text-slate-500">{sub}</p>}
     </div>
   );
 }
@@ -78,108 +67,117 @@ export function SubmitButton({ busy, busyText = 'Please wait…', children }) {
     <button
       type="submit"
       disabled={busy}
-      className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-royal text-[15px] font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+      className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-royal text-[16px] font-semibold text-white shadow-md shadow-blue-600/25 transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
     >
-      {busy ? busyText : (
-        <>
-          {children}
-          <ArrowRight className="h-4 w-4" />
-        </>
-      )}
+      {busy ? busyText : children}
     </button>
   );
 }
 
-const Flag = () => (
-  <svg width="20" height="14" viewBox="0 0 22 15" className="rounded-[2px] ring-1 ring-black/10" aria-hidden="true">
-    <rect width="22" height="5" fill="#ff9933" />
-    <rect y="5" width="22" height="5" fill="#fff" />
-    <rect y="10" width="22" height="5" fill="#138808" />
-    <circle cx="11" cy="7.5" r="1.8" fill="none" stroke="#000080" strokeWidth=".7" />
-  </svg>
-);
+export function SocialButtons() {
+  return (
+    <div className="mt-6">
+      <div className="relative flex items-center justify-center">
+        <div className="w-full border-t border-slate-200" />
+        <span className="absolute bg-white px-3 text-xs text-slate-400">or continue with</span>
+      </div>
+
+      <div className="mt-6">
+        <button
+          type="button"
+          className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const Squiggle = () => (
-  <svg className="absolute -bottom-2.5 left-0 h-3 w-full" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
+  <svg className="absolute -bottom-2 left-0 h-2.5 w-full" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
     <path d="M2 8 C 30 2, 60 12, 100 6 S 170 3, 198 7" stroke="#1f5fe0" strokeWidth="3.2" fill="none" strokeLinecap="round" />
   </svg>
 );
 
-/* Full auth layout matching landing page branding */
-export function AuthShell({ onSubmit, wide = false, children }) {
+export function AuthShell({ onSubmit, wide = false, isLogin = false, children }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-r from-white via-[#f4f8ff] to-[#e9f1ff] font-sans text-navy">
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1240px] flex-col px-5 sm:px-8">
-        {/* Top bar with landing logo */}
-        <header className="flex h-16 items-center justify-between py-4">
-          <Link href="/" aria-label="EduManage home">
-            <Logo />
-          </Link>
-          <Link
-            href="/"
-            className="text-sm font-semibold text-slate-600 transition hover:text-royal"
-          >
-            ← Back to Home
-          </Link>
-        </header>
+    <div className="min-h-screen w-full bg-white">
+      <div className="flex min-h-screen w-full flex-col lg:flex-row">
+        
+        {/* Left Side: Full-height Hero section with background image & overlay */}
+        <section className="relative hidden w-full overflow-hidden bg-slate-900 lg:block lg:w-1/2 xl:w-[52%]">
+          {/* Background Hero Image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/landing/hero.webp"
+            alt="Tutoring Institute Teacher"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
 
-        <main className="grid flex-1 items-center gap-10 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:py-12">
-          {/* Left hero info - matching landing page design */}
-          <section className="hidden flex-col justify-center lg:flex">
+          {/* White soft gradient overlay at top-left so logo and text are crystal clear */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/70 to-black/30" />
+
+          {/* Left Content */}
+          <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-14 2xl:p-16">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-[13px] font-medium shadow-sm ring-1 ring-slate-200">
-                <Flag />
-                Built for coaching institutes in India
-              </span>
-
-              <h1 className="mt-6 text-[42px] font-extrabold leading-[1.12] tracking-tight text-navy xl:text-[46px]">
-                Run your coaching institute without{' '}
-                <span className="relative inline-block text-royal">
-                  the chaos
-                  <Squiggle />
-                </span>
-              </h1>
-
-              <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-slate-600">
-                Admissions, fees, attendance, teachers and parent updates on WhatsApp, all in one simple dashboard.
-              </p>
-
-              <ul className="mt-7 space-y-3">
-                {POINTS.map((p) => (
-                  <li key={p} className="flex items-center gap-3 text-[15px] font-medium text-slate-700">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                    </span>
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Stats bar */}
-            <div className="mt-10 grid grid-cols-4 gap-4 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm backdrop-blur">
-              {STATS.map(([Icon, value, label]) => (
-                <div key={label}>
-                  <div className="text-[20px] font-extrabold text-navy">{value}</div>
-                  <div className="mt-0.5 text-xs font-medium text-slate-500">{label}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Form card */}
-          <section className="flex justify-center lg:justify-end">
-            <form
-              onSubmit={onSubmit}
-              className={`w-full rounded-2xl border border-slate-200/80 bg-white p-7 shadow-xl shadow-blue-900/5 sm:p-9 ${wide ? 'max-w-[560px]' : 'max-w-[460px]'}`}
-            >
-              <div className="flex justify-center">
+              <Link href="/" aria-label="EduManage home" className="inline-block">
                 <Logo />
+              </Link>
+
+              <div className="mt-14 max-w-[460px] xl:mt-20">
+                <h1 className="text-[40px] font-extrabold leading-[1.12] tracking-tight text-slate-900 xl:text-[46px] 2xl:text-[50px]">
+                  Manage Your
+                  <br />
+                  Tutoring Institute
+                  <br />
+                  with{' '}
+                  <span className="relative inline-block text-royal">
+                    EduManage
+                    <Squiggle />
+                  </span>
+                </h1>
+
+                <ul className="mt-8 space-y-4 xl:mt-10">
+                  {BULLETS.map((b) => (
+                    <li key={b} className="flex items-center gap-3.5 text-[17px] font-semibold text-slate-800">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-royal text-white shadow-sm shadow-blue-500/40">
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </span>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
               </div>
+            </div>
+
+            <div className="mt-10 text-sm font-medium text-slate-700/90">
+              Trusted by 1,000+ coaching institutes across India
+            </div>
+          </div>
+        </section>
+
+        {/* Right Side: Fullscreen Form */}
+        <section className="flex flex-1 flex-col justify-center px-6 py-10 sm:px-12 md:py-16 lg:px-14 xl:px-20">
+          {/* Mobile Logo */}
+          <div className="mb-6 flex justify-center lg:hidden">
+            <Link href="/" aria-label="EduManage home">
+              <Logo />
+            </Link>
+          </div>
+
+          <div className={`mx-auto w-full ${wide ? 'max-w-[480px]' : 'max-w-[420px]'}`}>
+            <form onSubmit={onSubmit}>
               {children}
             </form>
-          </section>
-        </main>
+          </div>
+        </section>
       </div>
     </div>
   );
