@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -32,7 +32,7 @@ const TABS = [
   { id: 'leaves', label: 'Leave Applications', sub: 'Manage Leave Requests', icon: FileText },
 ];
 
-export default function AttendancePage() {
+function AttendanceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'students';
@@ -724,5 +724,13 @@ export default function AttendancePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AttendancePage() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center"><Spinner /></div>}>
+      <AttendanceContent />
+    </Suspense>
   );
 }

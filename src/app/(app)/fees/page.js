@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -66,7 +66,7 @@ const SUB_MODULE_TABS = [
   ['reports', 'Financial Reports'],
 ];
 
-export default function FeesAccountsPage() {
+function FeesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'overview';
@@ -913,5 +913,13 @@ export default function FeesAccountsPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+export default function FeesAccountsPage() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center">Loading fees...</div>}>
+      <FeesContent />
+    </Suspense>
   );
 }

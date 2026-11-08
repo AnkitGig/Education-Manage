@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -39,7 +39,7 @@ import {
   Empty
 } from '@/components/ui';
 
-export default function StaffManagementPage() {
+function StaffManagementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'teachers';
@@ -776,5 +776,13 @@ export default function StaffManagementPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+export default function StaffManagementPage() {
+  return (
+    <Suspense fallback={<div className="flex h-64 items-center justify-center">Loading staff...</div>}>
+      <StaffManagementContent />
+    </Suspense>
   );
 }
