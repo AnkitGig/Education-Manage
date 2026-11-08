@@ -1,20 +1,83 @@
 import { NextResponse } from 'next/server';
 import { wrap } from '@/lib/crud';
+import { connectDB } from '@/lib/db';
 import { curMonth } from '@/lib/utils';
-import Teacher from '@/models/Teacher';
+import Staff from '@/models/Staff';
 import Salary from '@/models/Salary';
 
-// ?month=YYYY-MM -> payroll rows ;  ?teacher=ID -> salary history of one teacher
+// GET /api/salary?month=YYYY-MM&type=Teaching|Non-Teaching|all&q=
 export const GET = wrap(async (req) => {
+  await connectDB();
   const sp = new URL(req.url).searchParams;
-  if (sp.get('teacher')) {
-    const data = await Salary.find({ teacher: sp.get('teacher') }).sort({ month: -1 }).lean();
+  const month = sp.get('month') || curMonth();
+  const type = sp.get('type');
+  const q = (sp.get('q') || '').toLowerCase().trim();
+
+  // If querying salary history of one specific staff member
+  if (sp.get('staff')) {
+    const data = await Salary.find({ staff: sp.get('staff') })
+      .populate('staff', 'name staffId role department type')
+      .sort({ month: -1 })
+      .lean();
     return NextResponse.json({ data });
   }
-  const month = sp.get('month') || curMonth();
-  const [teachers, rows] = await Promise.all([Teacher.find({ status: { $ne: 'inactive' } }).sort({ createdAt: 1 }).lean(), Salary.find({ month }).lean()]);
-  const data = teachers.map((t) => ({ teacher: t, salary: rows.find((r) => String(r.teacher) === String(t._id)) || null }));
-  return NextResponse.json({ data, month });
+
+  // Find all active / eligible staff members
+  const staffFilter = { status: { $ne: 'Inactive' } };
+  if (type && type !== 'all') staffFilter.type = type;
+
+  const [staffList, salaryRows] = await Promise.all([
+    Staff.find(staffFilter).sort({ type: 1, name: 1 }).lean(),
+    Salary.find({ month }).lean(),
+  ]);
+
+  const salaryMap = Object.fromEntries(salaryRows.map((r) => [String(r.staff), r]));
+
+  let data = staffList.map((s) => {
+    const sal = salaryMap[String(s._id)] || null;
+    return {
+      staff: s,
+      salary: sal,
+      baseSalary: s.salary || 0,
+      netSalary: sal ? sal.netAmount : s.salary || 0,
+      status: sal ? sal.status : 'not_generated',
+      paidOn: sal?.paidOn || null,
+      paymentMode: sal?.paymentMode || 'Bank Transfer',
+    };
+  });
+
+  if (q) {
+    data = data.filter(
+      (r) =>
+        r.staff.name.toLowerCase().includes(q) ||
+        (r.staff.staffId && r.staff.staffId.toLowerCase().includes(q)) ||
+        (r.staff.department && r.staff.department.toLowerCase().includes(q)) ||
+        (r.staff.role && r.staff.role.toLowerCase().includes(q))
+    );
+  }
+
+  // Summary counts for this month
+  const totalStaff = data.length;
+  const paidCount = data.filter((r) => r.status === 'paid').length;
+  const pendingCount = totalStaff - paidCount;
+  const totalPayroll = data.reduce((sum, r) => sum + (r.netSalary || 0), 0);
+  const paidAmount = data
+    .filter((r) => r.status === 'paid')
+    .reduce((sum, r) => sum + (r.netSalary || 0), 0);
+  const pendingAmount = totalPayroll - paidAmount;
+
+  return NextResponse.json({
+    data,
+    month,
+    stats: {
+      totalStaff,
+      paidCount,
+      pendingCount,
+      totalPayroll,
+      paidAmount,
+      pendingAmount,
+    },
+  });
 });
 
 export const dynamic = 'force-dynamic';
