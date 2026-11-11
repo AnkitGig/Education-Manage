@@ -151,13 +151,25 @@ export const GET = wrap(async () => {
       return {
         _id: saved._id,
         courseId: c._id,
+        name: saved.name || `${c.name} - Regular`,
+        academicSession: saved.academicSession || '2026 - 2027',
+        section: saved.section || 'A',
         class: c.name,
         tuition: saved.tuition || 0,
         exam: saved.exam || 0,
         lab: saved.lab || 0,
         library: saved.library || 0,
+        feeTypes: saved.feeTypes || [],
+        installments: saved.installments || [],
+        enableInstallments: saved.enableInstallments !== undefined ? saved.enableInstallments : true,
+        numberOfInstallments: saved.numberOfInstallments || 4,
+        applyLateFee: saved.applyLateFee !== undefined ? saved.applyLateFee : true,
+        lateFeeAmount: saved.lateFeeAmount || 100,
+        lateFeePeriod: saved.lateFeePeriod || 'Per Day',
+        allowPartialPayment: saved.allowPartialPayment || false,
+        isActive: saved.isActive !== undefined ? saved.isActive : true,
         total: saved.total || 0,
-        frequency: saved.frequency || 'monthly',
+        frequency: saved.frequency || 'yearly',
       };
     }
 
@@ -169,13 +181,29 @@ export const GET = wrap(async () => {
 
     return {
       courseId: c._id,
+      name: `${c.name} - Regular`,
+      academicSession: '2026 - 2027',
+      section: 'A',
       class: c.name,
       tuition,
       exam,
       lab,
       library: 0,
+      feeTypes: [
+        { type: 'Tuition Fee', amount: tuition, frequency: 'Annual' },
+        ...(exam > 0 ? [{ type: 'Activity Fee', amount: exam, frequency: 'Annual' }] : []),
+        ...(lab > 0 ? [{ type: 'Computer Fee', amount: lab, frequency: 'Annual' }] : []),
+      ],
+      installments: [],
+      enableInstallments: true,
+      numberOfInstallments: 4,
+      applyLateFee: true,
+      lateFeeAmount: 100,
+      lateFeePeriod: 'Per Day',
+      allowPartialPayment: false,
+      isActive: true,
       total: total || tuition,
-      frequency: primaryPlan?.plan ? primaryPlan.plan.replace('_', ' ') : 'monthly',
+      frequency: primaryPlan?.plan ? primaryPlan.plan.replace('_', ' ') : 'yearly',
     };
   });
 
