@@ -63,4 +63,9 @@ S.pre('save', function (next) {
   next();
 });
 
-export default mongoose.models.FeeStructure || mongoose.model('FeeStructure', S);
+// Delete cached model in development to force re-compilation with new schema fields
+if (mongoose.models.FeeStructure) {
+  delete mongoose.models.FeeStructure;
+}
+
+export default mongoose.model('FeeStructure', S);
