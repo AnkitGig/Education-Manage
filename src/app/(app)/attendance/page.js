@@ -56,10 +56,27 @@ function AttendanceContent() {
   const [selectedAll, setSelectedAll] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
 
+  // Fetch real classes list
+  const { data: coursesData } = useApi('/api/courses');
+
   // Fetch student attendance overview
   const { data, isLoading, mutate } = useApi(
-    `/api/attendance/overview?class=${encodeURIComponent(selectedClass)}&section=${section}&date=${date}`
+    `/api/attendance/overview?class=${encodeURIComponent(selectedClass)}&section=${encodeURIComponent(section)}&date=${date}`
   );
+
+  const classList = coursesData?.data?.length ? coursesData.data : (data?.classesList || []);
+
+  // Sync selectedClass to the first available class if not yet valid
+  useEffect(() => {
+    if (coursesData?.data?.length && !coursesData.data.some((c) => c.name === selectedClass)) {
+      setSelectedClass(coursesData.data[0].name);
+    }
+  }, [coursesData, selectedClass]);
+
+  // Section options dynamically driven by backend for the chosen class
+  const sectionOptions = data?.sectionsList?.length
+    ? data.sectionsList
+    : [{ name: 'Section A', shortName: 'A' }, { name: 'Section B', shortName: 'B' }, { name: 'Section C', shortName: 'C' }];
 
   // Fetch staff attendance & leaves for sub-tabs
   const { data: staffAttData, mutate: mutateStaffAtt } = useApi(`/api/staff/attendance?date=${date}`);
@@ -201,16 +218,24 @@ function AttendanceContent() {
                 <label className="mb-1 block text-[11px] font-bold text-slate-500">Class</label>
                 <select
                   value={selectedClass}
-                  onChange={(e) => setSelectedClass(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedClass(e.target.value);
+                    setSection('A');
+                  }}
                   className="h-10 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none focus:border-royal"
                 >
-                  <option value="Class 6">Class 6</option>
-                  <option value="Class 7">Class 7</option>
-                  <option value="Class 8">Class 8</option>
-                  <option value="Class 9">Class 9</option>
-                  <option value="Class 10">Class 10</option>
-                  <option value="Class 11">Class 11</option>
-                  <option value="Class 12">Class 12</option>
+                  {classList.map((c) => (
+                    <option key={c._id || c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                  {classList.length === 0 && (
+                    <>
+                      <option value="Class 8">Class 8</option>
+                      <option value="Class 10">Class 10</option>
+                      <option value="Class 12">Class 12</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -222,9 +247,11 @@ function AttendanceContent() {
                   onChange={(e) => setSection(e.target.value)}
                   className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none focus:border-royal"
                 >
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
+                  {sectionOptions.map((s) => (
+                    <option key={s._id || s.name} value={s.shortName || s.name}>
+                      {s.shortName || s.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
