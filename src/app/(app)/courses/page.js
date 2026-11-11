@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { BookOpen, Layers, Users, UserCog, Plus, Pencil, Trash2, Search, Calendar, GraduationCap, IndianRupee, Clock } from 'lucide-react';
+import { BookOpen, Layers, Users, UserCog, Plus, Pencil, Trash2, Search, GraduationCap } from 'lucide-react';
 import { useApi, api, run, fmtTime } from '@/lib/client';
 import { Stat, Card, Table, Modal, Field, Badge, StatusBadge, Avatar, PageHeader, Tabs, inr, cn } from '@/components/ui';
 
@@ -8,208 +8,134 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const PLANS = [
   ['monthly', 'Monthly', 1],
   ['quarterly', 'Quarterly', 3],
-  ['half_yearly', 'Half Yearly', 6],
+  ['half_yearly', 'Half-yearly', 6],
   ['yearly', 'Yearly', 12],
 ];
 
-function CourseModal({ open, onClose, initial, onSaved }) {
-  const blank = {
-    name: '',
-    board: 'CBSE',
-    durationMonths: 12,
-    status: 'active',
-    fees: PLANS.map(([plan, , months]) => ({ plan, months, amount: 0 })),
-  };
-  const [f, setF] = useState(null);
-  const v = f || initial || blank;
+/* ---------- Class modal ---------- */
+
+function CourseModal({ initial, onClose, onSaved }) {
+  const [v, setV] = useState(
+    initial || { name: '', board: 'CBSE', durationMonths: 12, status: 'active', fees: [] }
+  );
+  const [busy, setBusy] = useState(false);
+  const fee = (plan) => v.fees?.find((x) => x.plan === plan)?.amount || '';
 
   const save = async () => {
+    if (!v.name.trim()) return;
+    setBusy(true);
     const body = {
       ...v,
-      fees: PLANS.map(([plan, , months]) => ({
-        plan,
-        months,
-        amount: +(v.fees.find((x) => x.plan === plan)?.amount || 0),
-      })),
+      fees: PLANS.map(([plan, , months]) => ({ plan, months, amount: Number(fee(plan)) || 0 })),
     };
     const r = await run(
       () => (initial ? api(`/api/courses/${initial._id}`, 'PUT', body) : api('/api/courses', 'POST', body)),
-      'Class details saved successfully'
+      'Class saved'
     );
-    if (r) {
-      setF(null);
-      onSaved(r);
-      onClose();
-    }
+    setBusy(false);
+    if (r) { onSaved(r); onClose(); }
   };
 
   const setFee = (plan, amount) =>
-    setF({
+    setV({
       ...v,
-      fees: PLANS.map(([p, , m]) => ({
-        plan: p,
-        months: m,
-        amount: p === plan ? amount : v.fees.find((x) => x.plan === p)?.amount || 0,
-      })),
+      fees: PLANS.map(([p, , m]) => ({ plan: p, months: m, amount: p === plan ? amount : fee(p) })),
     });
 
   return (
-    <Modal open={open} onClose={() => { setF(null); onClose(); }} title={initial ? 'Edit Class' : 'Add New Class'}>
+    <Modal open onClose={onClose} title={initial ? 'Edit class' : 'New class'}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Class Name (e.g. Class 8, Class 9, Class 10)" required className="sm:col-span-2">
-          <input
-            className="inp"
-            placeholder="e.g. Class 10 (Secondary)"
-            value={v.name}
-            onChange={(e) => setF({ ...v, name: e.target.value })}
-          />
+        <Field label="Class name" required className="sm:col-span-2">
+          <input className="inp" placeholder="e.g. Class 10" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} autoFocus />
         </Field>
-        <Field label="Board / Curriculum">
-          <input
-            className="inp"
-            placeholder="CBSE / ICSE / State Board"
-            value={v.board || ''}
-            onChange={(e) => setF({ ...v, board: e.target.value })}
-          />
+        <Field label="Board">
+          <input className="inp" placeholder="CBSE, ICSE, State" value={v.board || ''} onChange={(e) => setV({ ...v, board: e.target.value })} />
         </Field>
-        <Field label="Academic Session Duration (months)">
-          <input
-            type="number"
-            className="inp"
-            value={v.durationMonths}
-            onChange={(e) => setF({ ...v, durationMonths: +e.target.value })}
-          />
+        <Field label="Duration (months)">
+          <input type="number" min="1" className="inp" value={v.durationMonths} onChange={(e) => setV({ ...v, durationMonths: Number(e.target.value) })} />
         </Field>
         <div className="sm:col-span-2">
-          <span className="lbl">Standard Fee Structure (₹)</span>
+          <div className="mb-2 text-sm font-semibold text-ink">Fees (₹)</div>
           <div className="grid grid-cols-2 gap-3">
-            {PLANS.map(([p, l]) => (
-              <label key={p} className="text-xs text-slate-500">
-                {l}
-                <input
-                  type="number"
-                  min="0"
-                  className="inp mt-1"
-                  value={v.fees.find((x) => x.plan === p)?.amount || 0}
-                  onChange={(e) => setFee(p, +e.target.value)}
-                />
-              </label>
+            {PLANS.map(([p, label]) => (
+              <Field key={p} label={label}>
+                <input type="number" min="0" className="inp" value={fee(p)} onChange={(e) => setFee(p, e.target.value)} />
+              </Field>
             ))}
           </div>
         </div>
       </div>
       <div className="mt-5 flex justify-end gap-2">
-        <button className="btn border" onClick={onClose}>
-          Cancel
-        </button>
-        <button className="btn-primary" onClick={save}>
-          Save Class
-        </button>
+        <button className="btn border border-ink/10" onClick={onClose}>Cancel</button>
+        <button className="btn-primary" disabled={busy || !v.name.trim()} onClick={save}>Save class</button>
       </div>
     </Modal>
   );
 }
 
-function BatchModal({ open, onClose, initial, courseId, onSaved }) {
-  // Directly query teaching staff for Class Teacher assignment
-  const { data: staffData } = useApi(open ? '/api/staff?type=Teaching&limit=100' : null);
-  const teachers = staffData?.data || [];
+/* ---------- Section modal ---------- */
 
-  const [f, setF] = useState(null);
-  const defaultTeacherId = initial?.teacher?._id || (typeof initial?.teacher === 'string' ? initial.teacher : '');
-  const v =
-    f || {
-      name: initial?.name || '',
-      teacher: defaultTeacherId,
-      startTime: initial?.startTime || '08:00',
-      endTime: initial?.endTime || '14:00',
-      days: initial?.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      room: initial?.room || '',
-      timetable: initial?.timetable || [],
-    };
+function BatchModal({ initial, courseId, onClose, onSaved }) {
+  const { data: staff } = useApi('/api/staff?type=Teaching&limit=100');
+  const teachers = staff?.data || [];
+  const [busy, setBusy] = useState(false);
+  const [v, setV] = useState({
+    name: initial?.name || '',
+    teacher: initial?.teacher?._id || (typeof initial?.teacher === 'string' ? initial.teacher : ''),
+    startTime: initial?.startTime || '08:00',
+    endTime: initial?.endTime || '14:00',
+    days: initial?.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    room: initial?.room || '',
+    timetable: initial?.timetable || [],
+  });
 
+  const subject = (d) => v.timetable.find((t) => t.day === d)?.subject || '';
+  const setSubject = (d, s) =>
+    setV({ ...v, timetable: [...v.timetable.filter((t) => t.day !== d), { day: d, subject: s }] });
   const toggle = (d) =>
-    setF({
-      ...v,
-      days: v.days.includes(d) ? v.days.filter((x) => x !== d) : [...v.days, d],
-    });
-
-  const subj = (d) => v.timetable?.find((t) => t.day === d)?.subject || '';
+    setV({ ...v, days: v.days.includes(d) ? v.days.filter((x) => x !== d) : [...v.days, d] });
 
   const save = async () => {
-    const teacherId = typeof v.teacher === 'object' && v.teacher?._id ? v.teacher._id : v.teacher;
+    if (!v.name.trim()) return;
+    setBusy(true);
     const body = {
       name: v.name,
       course: initial?.course?._id || initial?.course || courseId,
-      teacher: teacherId ? String(teacherId) : null,
-      startTime: v.startTime || '08:00',
-      endTime: v.endTime || '14:00',
-      room: v.room || '',
-      days: v.days || [],
-      timetable: (v.days || []).map((d) => ({ day: d, subject: subj(d) })),
+      teacher: v.teacher || null,
+      startTime: v.startTime,
+      endTime: v.endTime,
+      room: v.room,
+      days: v.days,
+      timetable: v.days.map((d) => ({ day: d, subject: subject(d) })),
     };
     const r = await run(
       () => (initial ? api(`/api/batches/${initial._id}`, 'PUT', body) : api('/api/batches', 'POST', body)),
-      'Section saved & Teacher assigned'
+      'Section saved'
     );
-    if (r) {
-      setF(null);
-      onSaved();
-      onClose();
-    }
+    setBusy(false);
+    if (r) { onSaved(); onClose(); }
   };
 
   return (
-    <Modal open={open} onClose={() => { setF(null); onClose(); }} title={initial ? 'Edit Section' : 'Add Section'} width="max-w-xl">
+    <Modal open onClose={onClose} title={initial ? 'Edit section' : 'New section'} width="max-w-xl">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Section Name" required>
-          <input
-            className="inp"
-            placeholder="e.g. Section A, Section B"
-            value={v.name}
-            onChange={(e) => setF({ ...v, name: e.target.value })}
-          />
+        <Field label="Section name" required>
+          <input className="inp" placeholder="e.g. A" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} autoFocus />
         </Field>
-        <Field label="Class Teacher (Assigned from Staff)">
-          <select
-            className="inp"
-            value={typeof v.teacher === 'object' && v.teacher?._id ? v.teacher._id : v.teacher || ''}
-            onChange={(e) => setF({ ...v, teacher: e.target.value })}
-          >
-            <option value="">Unassigned</option>
-            {teachers.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.name} ({t.staffId || 'Teacher'}) {t.subjects?.length ? `• ${t.subjects.join(', ')}` : ''}
-              </option>
-            ))}
+        <Field label="Class teacher">
+          <select className="inp" value={v.teacher || ''} onChange={(e) => setV({ ...v, teacher: e.target.value })}>
+            <option value="">Not assigned</option>
+            {teachers.map((t) => <option key={t._id} value={t._id}>{t.name}</option>)}
           </select>
         </Field>
-        <Field label="School Start Time">
-          <input
-            type="time"
-            className="inp"
-            value={v.startTime}
-            onChange={(e) => setF({ ...v, startTime: e.target.value })}
-          />
+        <Field label="Starts"><input type="time" className="inp" value={v.startTime} onChange={(e) => setV({ ...v, startTime: e.target.value })} /></Field>
+        <Field label="Ends"><input type="time" className="inp" value={v.endTime} onChange={(e) => setV({ ...v, endTime: e.target.value })} /></Field>
+        <Field label="Room" className="sm:col-span-2">
+          <input className="inp" placeholder="e.g. Room 102" value={v.room} onChange={(e) => setV({ ...v, room: e.target.value })} />
         </Field>
-        <Field label="School End Time">
-          <input
-            type="time"
-            className="inp"
-            value={v.endTime}
-            onChange={(e) => setF({ ...v, endTime: e.target.value })}
-          />
-        </Field>
-        <Field label="Classroom / Room No.">
-          <input
-            className="inp"
-            placeholder="Room 102, Building A"
-            value={v.room || ''}
-            onChange={(e) => setF({ ...v, room: e.target.value })}
-          />
-        </Field>
+
         <div className="sm:col-span-2">
-          <span className="lbl">Active School Days</span>
+          <div className="mb-2 text-sm font-semibold text-ink">School days</div>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((d) => (
               <button
@@ -218,7 +144,7 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
                 onClick={() => toggle(d)}
                 className={cn(
                   'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
-                  v.days.includes(d) ? 'border-brand-600 bg-brand-600 text-white' : 'bg-white hover:bg-slate-50'
+                  v.days.includes(d) ? 'border-brand-600 bg-brand-600 text-white' : 'border-ink/10 bg-white hover:bg-ink-50'
                 )}
               >
                 {d}
@@ -226,27 +152,15 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
             ))}
           </div>
         </div>
+
         {v.days.length > 0 && (
           <div className="sm:col-span-2">
-            <span className="lbl">Weekly Timetable (Major Subject per day)</span>
+            <div className="mb-2 text-sm font-semibold text-ink">Subject per day</div>
             <div className="grid grid-cols-2 gap-2">
-              {v.days.map((d) => (
+              {DAYS.filter((d) => v.days.includes(d)).map((d) => (
                 <div key={d} className="flex items-center gap-2">
-                  <span className="w-10 text-xs font-bold text-slate-500">{d}</span>
-                  <input
-                    className="inp text-xs"
-                    placeholder="e.g. Mathematics / Physics"
-                    value={subj(d)}
-                    onChange={(e) =>
-                      setF({
-                        ...v,
-                        timetable: [
-                          ...(v.timetable || []).filter((t) => t.day !== d),
-                          { day: d, subject: e.target.value },
-                        ],
-                      })
-                    }
-                  />
+                  <span className="w-9 text-xs font-bold text-ink-400">{d}</span>
+                  <input className="inp text-sm" placeholder="Subject" value={subject(d)} onChange={(e) => setSubject(d, e.target.value)} />
                 </div>
               ))}
             </div>
@@ -254,299 +168,233 @@ function BatchModal({ open, onClose, initial, courseId, onSaved }) {
         )}
       </div>
       <div className="mt-5 flex justify-end gap-2">
-        <button className="btn border" onClick={onClose}>
-          Cancel
-        </button>
-        <button className="btn-primary" onClick={save}>
-          Save Section
-        </button>
+        <button className="btn border border-ink/10" onClick={onClose}>Cancel</button>
+        <button className="btn-primary" disabled={busy || !v.name.trim()} onClick={save}>Save section</button>
       </div>
     </Modal>
   );
 }
 
+/* ---------- Page ---------- */
+
 export default function Courses() {
   const { data: courses, mutate: mc } = useApi('/api/courses');
+  const { data: staffStats } = useApi('/api/staff?type=Teaching&limit=1');
   const [selId, setSelId] = useState(null);
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState('batches');
-  const [cm, setCm] = useState(null);
+  const [tab, setTab] = useState('sections');
+  const [ttId, setTtId] = useState(null);
+  const [cm, setCm] = useState(null); // { initial? }
   const [bm, setBm] = useState(null);
-  const [tt, setTt] = useState(null);
 
-  const list = (courses?.data || []).filter((c) => c.name.toLowerCase().includes(q.toLowerCase()));
-  const sel = courses?.data.find((c) => c._id === selId) || courses?.data[0];
+  const all = courses?.data || [];
+  const list = all.filter((c) => c.name.toLowerCase().includes(q.toLowerCase()));
+  const sel = all.find((c) => c._id === selId) || all[0];
   const { data: batches, mutate: mb } = useApi(sel ? `/api/batches?course=${sel._id}` : null);
-  const ttBatch = batches?.data.find((b) => b._id === tt) || batches?.data[0];
-  const totals = (courses?.data || []).reduce((a, c) => ({ s: a.s + c.students, b: a.b + c.batches }), { s: 0, b: 0 });
-
-  // Direct Teacher Count from Staff DB
-  const { data: staffStats } = useApi('/api/staff?type=Teaching&limit=1');
+  const sections = batches?.data || [];
+  const ttBatch = sections.find((b) => b._id === ttId) || sections[0];
+  const totals = all.reduce((a, c) => ({ s: a.s + c.students, b: a.b + c.batches }), { s: 0, b: 0 });
 
   const delBatch = async (b) => {
-    if (confirm(`Delete ${b.name}?`)) {
-      await run(() => api(`/api/batches/${b._id}`, 'DELETE'), 'Section deleted');
-      mb();
-      mc();
-    }
+    if (!confirm(`Delete section ${b.name}?`)) return;
+    await run(() => api(`/api/batches/${b._id}`, 'DELETE'), 'Section deleted');
+    mb(); mc();
   };
 
   const delCourse = async () => {
-    if (confirm(`Delete class ${sel.name}? Sections and students linked to it will remain.`)) {
-      await run(() => api(`/api/courses/${sel._id}`, 'DELETE'), 'Class deleted');
-      setSelId(null);
-      mc();
-    }
+    if (!confirm(`Delete ${sel.name}? Its sections and students will remain.`)) return;
+    await run(() => api(`/api/courses/${sel._id}`, 'DELETE'), 'Class deleted');
+    setSelId(null); mc();
   };
+
+  const timetableRows = ttBatch
+    ? (ttBatch.timetable?.length ? ttBatch.timetable : (ttBatch.days || []).map((d) => ({ day: d, subject: '' }))).map((t) => ({ _id: t.day, ...t }))
+    : [];
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        icon={GraduationCap}
-        title="Classes &amp; Sections"
-        sub="Organize school classes, allocate sections, assign class teachers from staff, and maintain weekly timetables."
-      >
-        <button className="btn-outline" onClick={() => setCm({})}>
-          <Plus className="h-4 w-4" />
-          Add Class
-        </button>
-        <button className="btn-primary" disabled={!sel} onClick={() => setBm({})}>
-          <Plus className="h-4 w-4" />
-          Add Section
-        </button>
+      <PageHeader icon={GraduationCap} title="Classes & sections">
+        <button className="btn-primary" onClick={() => setCm({})}><Plus className="h-4 w-4" />Add class</button>
       </PageHeader>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Stat icon={BookOpen} tone="green" label="Total Classes" value={courses?.data.length ?? '–'} />
-        <Stat icon={Layers} tone="purple" label="Total Sections" value={totals.b} />
-        <Stat icon={Users} tone="blue" label="Total Enrolled Students" value={totals.s} />
-        <Stat icon={UserCog} tone="orange" label="Teaching Staff" value={staffStats?.stats?.teachersCount ?? 0} />
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat icon={BookOpen} tone="green" label="Classes" value={courses ? all.length : '–'} />
+        <Stat icon={Layers} tone="purple" label="Sections" value={totals.b} />
+        <Stat icon={Users} tone="blue" label="Students" value={totals.s} />
+        <Stat icon={UserCog} tone="orange" label="Teachers" value={staffStats?.stats?.teachersCount ?? 0} />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
-        <Card
-          title={`Classes (${courses?.data.length || 0})`}
-          action={
-            <button className="btn-outline py-1 text-xs" onClick={() => setCm({})}>
-              <Plus className="h-3.5 w-3.5" />
-              Add Class
-            </button>
-          }
-        >
+      <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)]">
+        {/* Class list */}
+        <Card>
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              className="inp pl-9"
-              placeholder="Search class…"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input className="inp pl-9" placeholder="Search classes" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <div className="space-y-1">
             {list.map((c) => (
               <button
                 key={c._id}
-                onClick={() => setSelId(c._id)}
+                onClick={() => { setSelId(c._id); setTtId(null); }}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-xl p-3 text-left transition',
-                  sel?._id === c._id ? 'bg-brand-50 border border-brand-200 shadow-sm' : 'hover:bg-slate-50'
+                  'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition',
+                  sel?._id === c._id ? 'bg-brand-50 ring-1 ring-brand-200' : 'hover:bg-ink-50'
                 )}
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-600">
-                  <GraduationCap className="h-5 w-5" />
-                </span>
                 <span className="min-w-0">
-                  <span className="block truncate font-semibold text-ink">{c.name}</span>
-                  <span className="text-xs text-slate-500">
-                    {c.students} Students · {c.batches} Sections
-                  </span>
+                  <span className="block truncate text-sm font-semibold text-ink">{c.name}</span>
+                  <span className="text-xs text-ink-400">{c.batches} sections · {c.students} students</span>
                 </span>
               </button>
             ))}
             {!list.length && (
-              <p className="py-6 text-center text-sm text-slate-400">No classes found — add your first class.</p>
+              <p className="py-8 text-center text-sm text-ink-400">{all.length ? 'No match.' : 'No classes yet.'}</p>
             )}
           </div>
         </Card>
 
+        {/* Class detail */}
         {sel ? (
-          <div className="space-y-5">
-            <Card>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <GraduationCap className="h-9 w-9 text-brand-600" />
-                  <div>
-                    <h2 className="flex items-center gap-2 text-xl font-bold">
-                      {sel.name} <StatusBadge s={sel.status} />
-                    </h2>
-                    <div className="text-sm text-slate-500">
-                      Board: {sel.board || '–'} &nbsp;|&nbsp; Duration: {sel.durationMonths} Months &nbsp;|&nbsp; Enrolled Students: {sel.students}
-                    </div>
-                  </div>
+          <Card>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-ink">{sel.name}</h2>
+                  <StatusBadge s={sel.status} />
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn-outline" onClick={() => setCm({ initial: sel })}>
-                    <Pencil className="h-4 w-4" />
-                    Edit Class
-                  </button>
-                  <button className="btn border border-red-200 text-red-600 hover:bg-red-50" onClick={delCourse}>
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                <p className="mt-1 text-sm text-ink-400">
+                  {[sel.board, sel.durationMonths && `${sel.durationMonths} months`, `${sel.students} students`].filter(Boolean).join(' · ')}
+                </p>
               </div>
-
-              <div className="mt-4">
-                <Tabs
-                  value={tab}
-                  onChange={setTab}
-                  tabs={[
-                    ['batches', `Sections (${batches?.data.length || 0})`],
-                    ['fees', 'Class Fee Structure'],
-                  ]}
-                />
+              <div className="flex gap-2">
+                <button className="btn-outline" onClick={() => setCm({ initial: sel })}><Pencil className="h-4 w-4" />Edit</button>
+                <button className="btn-outline text-rose-600 hover:bg-rose-50" title="Delete class" onClick={delCourse}><Trash2 className="h-4 w-4" /></button>
               </div>
+            </div>
 
-              {tab === 'batches' ? (
-                <div className="mt-4">
-                  <Table
-                    rows={batches?.data}
-                    empty="No sections created yet — click Add Section above"
-                    cols={[
-                      { h: '#', render: (_, i) => i + 1 },
-                      {
-                        h: 'Section',
-                        render: (b) => (
-                          <button className="font-semibold text-brand-600 hover:underline" onClick={() => setTt(b._id)}>
-                            {b.name}
-                          </button>
-                        ),
-                      },
-                      {
-                        h: 'Class Teacher',
-                        render: (b) =>
-                          b.teacher ? (
-                            <div className="flex items-center gap-2">
-                              <Avatar src={b.teacher.photo?.url} name={b.teacher.name} size={28} />
-                              <div>
-                                <div className="font-semibold text-ink">{b.teacher.name}</div>
-                                <div className="text-[11px] text-ink-400">{b.teacher.staffId || 'Teacher'}</div>
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 italic">Unassigned</span>
-                          ),
-                      },
-                      { h: 'Students', render: (b) => <span className="font-bold">{b.students}</span> },
-                      {
-                        h: 'Timing & Days',
-                        render: (b) => (
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-slate-400" />
-                            <span>
-                              {fmtTime(b.startTime)} – {fmtTime(b.endTime)}
-                              <span className="block text-xs text-slate-400">{b.days?.join(', ')}</span>
-                            </span>
-                          </div>
-                        ),
-                      },
-                      { h: 'Status', render: (b) => <StatusBadge s={b.status} /> },
-                      {
-                        h: 'Actions',
-                        render: (b) => (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setBm({ initial: b })}
-                              title="Edit Section"
-                              className="rounded-lg p-1 text-brand-600 hover:bg-brand-50"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => delBatch(b)}
-                              title="Delete Section"
-                              className="rounded-lg p-1 text-red-500 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <Table
-                    rows={PLANS.map(([p, l, m]) => ({
-                      _id: p,
-                      l,
-                      m,
-                      a: sel.fees?.find((x) => x.plan === p)?.amount || 0,
-                    }))}
-                    cols={[
-                      { h: 'Plan', render: (r) => <b>{r.l}</b> },
-                      { h: 'Fee Amount', render: (r) => inr(r.a) },
-                      { h: 'Billing Period', render: (r) => `${r.m} ${r.m === 1 ? 'Month' : 'Months'}` },
-                      {
-                        h: 'Status',
-                        render: (r) =>
-                          r.a ? <Badge tone="green">Active</Badge> : <span className="text-slate-400">—</span>,
-                      },
-                    ]}
-                  />
-                </div>
-              )}
-            </Card>
+            <div className="mt-4">
+              <Tabs
+                value={tab}
+                onChange={setTab}
+                tabs={[
+                  ['sections', `Sections (${sections.length})`],
+                  ['timetable', 'Timetable'],
+                  ['fees', 'Fees'],
+                ]}
+              />
+            </div>
 
-            {tab === 'batches' && ttBatch && (
-              <Card title={`Weekly Schedule & Timetable (${sel.name} - ${ttBatch.name})`}>
+            {tab === 'sections' && (
+              <div className="mt-4 space-y-3">
+                <div className="flex justify-end">
+                  <button className="btn-outline text-xs h-9" onClick={() => setBm({})}><Plus className="h-3.5 w-3.5" />Add section</button>
+                </div>
                 <Table
-                  rows={(ttBatch.timetable?.length
-                    ? ttBatch.timetable
-                    : ttBatch.days?.map((d) => ({ day: d, subject: sel.name }))
-                  ).map((t) => ({ _id: t.day, ...t }))}
-                  empty="No timetable configured"
+                  rows={sections}
+                  empty="No sections yet."
                   cols={[
-                    { h: 'Day', render: (t) => <span className="font-bold">{t.day}</span> },
-                    { h: 'Subject', render: (t) => <span className="font-semibold text-brand-700">{t.subject || '–'}</span> },
-                    { h: 'Class Teacher', render: () => ttBatch.teacher?.name || '–' },
+                    { h: 'Section', render: (b) => <span className="font-semibold text-ink">{b.name}</span> },
+                    {
+                      h: 'Class teacher',
+                      render: (b) =>
+                        b.teacher ? (
+                          <div className="flex items-center gap-2">
+                            <Avatar src={b.teacher.photo?.url} name={b.teacher.name} size={28} />
+                            <span className="font-medium text-ink">{b.teacher.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-ink-400">Not assigned</span>
+                        ),
+                    },
+                    { h: 'Students', render: (b) => b.students },
                     {
                       h: 'Timing',
-                      render: () => `${fmtTime(ttBatch.startTime)} – ${fmtTime(ttBatch.endTime)}`,
+                      render: (b) => (
+                        <div>
+                          <div>{fmtTime(b.startTime)} – {fmtTime(b.endTime)}</div>
+                          <div className="text-xs text-ink-400">{b.days?.join(', ')}</div>
+                        </div>
+                      ),
+                    },
+                    {
+                      h: '',
+                      render: (b) => (
+                        <div className="flex justify-end gap-1">
+                          <button onClick={() => setBm({ initial: b })} title="Edit" className="rounded-lg p-1.5 text-ink-400 hover:bg-brand-50 hover:text-brand-600"><Pencil className="h-4 w-4" /></button>
+                          <button onClick={() => delBatch(b)} title="Delete" className="rounded-lg p-1.5 text-ink-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      ),
                     },
                   ]}
                 />
-              </Card>
+              </div>
             )}
-          </div>
+
+            {tab === 'timetable' && (
+              <div className="mt-4 space-y-3">
+                {sections.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-ink-400">Add a section to set up its timetable.</p>
+                ) : (
+                  <>
+                    <select className="inp w-auto" value={ttBatch?._id || ''} onChange={(e) => setTtId(e.target.value)}>
+                      {sections.map((b) => <option key={b._id} value={b._id}>Section {b.name}</option>)}
+                    </select>
+                    <Table
+                      rows={timetableRows}
+                      empty="No timetable set. Edit the section to add one."
+                      cols={[
+                        { h: 'Day', render: (t) => <span className="font-semibold text-ink">{t.day}</span> },
+                        { h: 'Subject', render: (t) => t.subject || '–' },
+                        { h: 'Time', render: () => `${fmtTime(ttBatch.startTime)} – ${fmtTime(ttBatch.endTime)}` },
+                        { h: 'Teacher', render: () => ttBatch.teacher?.name || '–' },
+                      ]}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+
+            {tab === 'fees' && (
+              <div className="mt-4">
+                <Table
+                  rows={PLANS.map(([p, l, m]) => ({ _id: p, l, m, a: sel.fees?.find((x) => x.plan === p)?.amount || 0 }))}
+                  cols={[
+                    { h: 'Plan', render: (r) => <span className="font-semibold text-ink">{r.l}</span> },
+                    { h: 'Amount', render: (r) => (r.a ? inr(r.a) : <span className="text-ink-400">Not set</span>) },
+                    { h: 'Billed every', render: (r) => `${r.m} ${r.m === 1 ? 'month' : 'months'}` },
+                    { h: '', render: (r) => (r.a ? <Badge tone="green">Active</Badge> : null) },
+                  ]}
+                />
+              </div>
+            )}
+          </Card>
         ) : (
-          <Card className="flex items-center justify-center py-20 text-slate-400">
-            Add a class to get started
+          <Card>
+            <div className="py-16 text-center">
+              <p className="text-sm text-ink-500">Add your first class to get started.</p>
+              <button className="btn-primary mt-3" onClick={() => setCm({})}><Plus className="h-4 w-4" />Add class</button>
+            </div>
           </Card>
         )}
       </div>
 
-      <CourseModal
-        open={!!cm}
-        onClose={() => setCm(null)}
-        initial={cm?.initial}
-        key={'c' + (cm?.initial?._id || 'new') + !!cm}
-        onSaved={(r) => {
-          mc();
-          if (!cm?.initial) setSelId(r._id);
-        }}
-      />
-      <BatchModal
-        open={!!bm}
-        onClose={() => setBm(null)}
-        initial={bm?.initial}
-        courseId={sel?._id}
-        key={'b' + (bm?.initial?._id || 'new') + !!bm}
-        onSaved={() => {
-          mb();
-          mc();
-        }}
-      />
+      {cm && (
+        <CourseModal
+          key={cm.initial?._id || 'new'}
+          initial={cm.initial}
+          onClose={() => setCm(null)}
+          onSaved={(r) => { mc(); if (!cm.initial && r?._id) setSelId(r._id); }}
+        />
+      )}
+      {bm && sel && (
+        <BatchModal
+          key={bm.initial?._id || 'new'}
+          initial={bm.initial}
+          courseId={sel._id}
+          onClose={() => setBm(null)}
+          onSaved={() => { mb(); mc(); }}
+        />
+      )}
     </div>
   );
 }
