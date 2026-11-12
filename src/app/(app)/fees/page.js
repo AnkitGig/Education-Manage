@@ -3,7 +3,7 @@ import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Wallet, AlertTriangle, CheckCircle2, Download, Plus, Search,
-  MessageCircle, Printer, Pencil, Copy, Trash2, X,
+  MessageCircle, Printer, Pencil, Copy, Trash2, X, ChevronRight,
 } from 'lucide-react';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -105,6 +105,7 @@ function FeesContent() {
   const [sid, setSid] = useState('');
   const [pay, setPay] = useState({ amount: '', mode: 'UPI' });
   const [receipt, setReceipt] = useState(null);
+  const [viewingStudent, setViewingStudent] = useState(null);
   const [structOpen, setStructOpen] = useState(false);
   const [form, setForm] = useState(blankStructure());
 
@@ -154,6 +155,17 @@ function FeesContent() {
       setCollectOpen(false);
       mutateFees?.();
       mutateDash();
+      const st = (fees?.data || []).find((x) => String(x.student?._id) === String(sid))?.student;
+      if (r.receiptNo) {
+        setReceipt({
+          receiptNo: r.receiptNo,
+          amount: Number(pay.amount),
+          name: st?.name || 'Student',
+          class: st?.course?.name || 'Class',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          mode: pay.mode,
+        });
+      }
     }
   };
 
@@ -443,31 +455,86 @@ function FeesContent() {
                   h: 'Student',
                   render: (r) => (
                     <div className="flex items-center gap-2.5">
-                      <Avatar src={r.student?.photo?.url} name={r.student?.name || 'S'} size={32} />
+                      <Avatar src={r.student?.photo?.url} name={r.student?.name || 'S'} size={34} />
                       <div>
-                        <div className="font-semibold text-ink">{r.student?.name}</div>
-                        <div className="text-xs text-ink-400">{r.student?.course?.name} · {r.student?.studentId}</div>
+                        <div className="font-semibold text-slate-800">{r.student?.name}</div>
+                        <div className="text-xs text-slate-400">
+                          {r.student?.course?.name || '–'}{r.student?.batch?.name ? ` · ${r.student.batch.name}` : ''} · {r.student?.studentId}
+                        </div>
                       </div>
                     </div>
                   ),
                 },
-                { h: 'Total', render: (r) => <span className="font-semibold text-ink">{inr(r.amount)}</span> },
-                { h: 'Paid', render: (r) => <span className="font-semibold text-emerald-600">{inr(r.paid)}</span> },
-                { h: 'Due', render: (r) => <span className={r.due ? 'font-semibold text-rose-600' : 'text-ink-400'}>{inr(r.due)}</span> },
-                { h: 'Status', render: (r) => <StatusBadge s={r.status} /> },
+                {
+                  h: 'Annual Fee',
+                  render: (r) => (
+                    <div>
+                      <span className="font-bold text-slate-800">{inr(r.amount)}</span>
+                      <span className="block text-[11px] text-slate-400">Full Year</span>
+                    </div>
+                  ),
+                },
+                {
+                  h: 'Paid',
+                  render: (r) => (
+                    <span className="font-bold text-emerald-600">{inr(r.paid)}</span>
+                  ),
+                },
+                {
+                  h: 'Pending Due',
+                  render: (r) => (
+                    <div>
+                      <span className={r.due ? 'font-bold text-rose-600' : 'font-medium text-slate-400'}>
+                        {inr(r.due)}
+                      </span>
+                      {r.due > 0 && r.nextPendingInstallment && (
+                        <span className="block text-[10px] font-medium text-amber-600">
+                          Next: {inr(r.nextPendingInstallment.due)}
+                        </span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  h: 'Installments',
+                  render: (r) =>
+                    r.totalInstallments > 0 ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewingStudent(r);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+                      >
+                        <span>{r.paidInstallmentsCount} of {r.totalInstallments} Paid</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                      </button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Single payment</span>
+                    ),
+                },
+                {
+                  h: 'Status',
+                  render: (r) => <StatusBadge s={r.status} />,
+                },
                 {
                   h: '',
                   render: (r) => (
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1.5">
                       {r.due > 0 && (
-                        <button title="Send WhatsApp reminder" onClick={() => remind(r.student?._id)} className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50">
+                        <button
+                          title="Send WhatsApp reminder"
+                          onClick={() => remind(r.student?._id)}
+                          className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+                        >
                           <MessageCircle className="h-4 w-4" />
                         </button>
                       )}
                       <button
-                        onClick={() => openCollect(r.student?._id, r.due)}
+                        onClick={() => openCollect(r.student?._id, r.nextPendingInstallment?.due || r.due)}
                         disabled={!r.due}
-                        className="rounded-lg border border-ink/10 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-40"
+                        className="rounded-lg bg-royal px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-royal/90 disabled:cursor-not-allowed disabled:opacity-30"
                       >
                         Collect
                       </button>
@@ -558,29 +625,159 @@ function FeesContent() {
 
       {/* ---------------- COLLECT MODAL ---------------- */}
       {collectOpen && (
-        <Modal open onClose={() => setCollectOpen(false)} title="Collect fee" width="max-w-md">
+        <Modal open onClose={() => setCollectOpen(false)} title="Collect Fee" width="max-w-md">
           <div className="space-y-4">
             <Field label="Student" required>
-              <select className="inp" value={sid} onChange={(e) => setSid(e.target.value)}>
+              <select
+                className="inp"
+                value={sid}
+                onChange={(e) => {
+                  const newSid = e.target.value;
+                  setSid(newSid);
+                  const sRow = (fees?.data || []).find((x) => String(x.student?._id) === String(newSid));
+                  if (sRow) {
+                    setPay({ ...pay, amount: String(sRow.nextPendingInstallment?.due || sRow.due || '') });
+                  }
+                }}
+              >
                 <option value="">Select student</option>
-                {students?.data?.map((s) => (
-                  <option key={s._id} value={s._id}>{s.name} ({s.studentId})</option>
+                {(fees?.data || []).map((row) => (
+                  <option key={row.student?._id} value={row.student?._id}>
+                    {row.student?.name} ({row.student?.studentId}) – Due: {inr(row.due)}
+                  </option>
                 ))}
               </select>
             </Field>
+
+            {/* Quick summary of the selected student's fee dues */}
+            {(() => {
+              const sRow = (fees?.data || []).find((x) => String(x.student?._id) === String(sid));
+              if (!sRow) return null;
+              return (
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3.5 text-xs">
+                  <div className="flex items-center justify-between font-medium">
+                    <span className="text-slate-500">Annual Fee: {inr(sRow.amount)}</span>
+                    <span className="text-emerald-600">Paid: {inr(sRow.paid)}</span>
+                    <span className="font-bold text-rose-600">Pending Due: {inr(sRow.due)}</span>
+                  </div>
+                  {sRow.due > 0 && (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-200/60 pt-2.5">
+                      <span className="font-semibold text-slate-500 text-[11px]">Quick Pay:</span>
+                      {sRow.nextPendingInstallment && sRow.nextPendingInstallment.due !== sRow.due && (
+                        <button
+                          type="button"
+                          onClick={() => setPay({ ...pay, amount: String(sRow.nextPendingInstallment.due) })}
+                          className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:border-royal hover:text-royal"
+                        >
+                          Next: {sRow.nextPendingInstallment.plan || 'Installment'} ({inr(sRow.nextPendingInstallment.due)})
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setPay({ ...pay, amount: String(sRow.due) })}
+                        className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 transition hover:border-royal hover:text-royal"
+                      >
+                        Full Due ({inr(sRow.due)})
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Amount (₹)" required>
-                <input type="number" min="1" className="inp" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} />
+              <Field label="Amount to Collect (₹)" required>
+                <input
+                  type="number"
+                  min="1"
+                  className="inp font-bold text-slate-800"
+                  value={pay.amount}
+                  onChange={(e) => setPay({ ...pay, amount: e.target.value })}
+                  placeholder="Enter amount"
+                />
               </Field>
-              <Field label="Mode">
+              <Field label="Payment Mode">
                 <select className="inp" value={pay.mode} onChange={(e) => setPay({ ...pay, mode: e.target.value })}>
                   {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </Field>
             </div>
-            <div className="flex justify-end gap-2 pt-1">
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
               <button onClick={() => setCollectOpen(false)} className="btn border border-ink/10">Cancel</button>
-              <button disabled={!sid || !pay.amount} onClick={collect} className="btn-primary">Collect</button>
+              <button disabled={!sid || !pay.amount || Number(pay.amount) <= 0} onClick={collect} className="btn-primary">
+                Collect &amp; Generate Receipt
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ---------------- VIEW INSTALLMENTS MODAL ---------------- */}
+      {viewingStudent && (
+        <Modal
+          open
+          onClose={() => setViewingStudent(null)}
+          title={`${viewingStudent.student?.name} – Installments Breakdown`}
+          width="max-w-xl"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3.5 text-sm">
+              <div>
+                <span className="text-xs text-slate-500">Annual Fee:</span>
+                <span className="ml-1.5 font-bold text-slate-800">{inr(viewingStudent.amount)}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Paid:</span>
+                <span className="ml-1.5 font-bold text-emerald-600">{inr(viewingStudent.paid)}</span>
+              </div>
+              <div>
+                <span className="text-xs text-slate-500">Pending:</span>
+                <span className="ml-1.5 font-bold text-rose-600">{inr(viewingStudent.due)}</span>
+              </div>
+            </div>
+
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+              {viewingStudent.installments?.map((inst, idx) => (
+                <div
+                  key={inst._id || idx}
+                  className="flex items-center justify-between rounded-xl border border-slate-100 p-3 transition hover:bg-slate-50/60"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-800">{inst.plan || `Installment ${idx + 1}`}</span>
+                      <StatusBadge s={inst.status} />
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Due: {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '–'}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-slate-900">{inr(inst.amount)}</div>
+                      {inst.due > 0 && <div className="text-[11px] font-semibold text-rose-600">Due: {inr(inst.due)}</div>}
+                    </div>
+                    {inst.due > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setViewingStudent(null);
+                          openCollect(viewingStudent.student?._id, inst.due);
+                        }}
+                        className="rounded-lg bg-royal px-2.5 py-1 text-xs font-bold text-white shadow-sm hover:bg-royal/90"
+                      >
+                        Pay
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end border-t border-slate-100 pt-2">
+              <button type="button" onClick={() => setViewingStudent(null)} className="btn border border-slate-200">
+                Close
+              </button>
             </div>
           </div>
         </Modal>
