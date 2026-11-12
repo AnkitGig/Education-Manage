@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Trash2, Phone, Mail, MessageCircle, FileText, ExternalLink, Upload } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Phone, Mail, MessageCircle, FileText, ExternalLink, Upload, Printer, Receipt } from 'lucide-react';
 import { useApi, api, run, fmtDate } from '@/lib/client';
 import { StatusBadge, Badge, Avatar, Card, Spinner, Modal, Field, Tabs, Table, inr } from '@/components/ui';
 
@@ -38,6 +38,7 @@ export default function StudentDetailPage() {
   const [payOpen, setPayOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState('UPI');
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   const { data: s } = useApi(`/api/students/${id}`);
   const { data: summary, mutate: mutateSummary } = useApi(`/api/students/${id}/summary`);
@@ -45,6 +46,7 @@ export default function StudentDetailPage() {
   if (!s) return <div className="flex h-[60vh] items-center justify-center"><Spinner /></div>;
 
   const fees = summary?.fees || { total: 0, paid: 0, due: 0, records: [] };
+  const paymentLogs = summary?.paymentLogs || [];
   const att = summary?.attendance || { present: 0, absent: 0, late: 0, total: 0, percent: 0 };
   const docs = s.documents || [];
 
@@ -77,6 +79,7 @@ export default function StudentDetailPage() {
     ['fees', `Fees${fees.records?.length ? ` (${fees.records.length})` : ''}`],
     ['attendance', 'Attendance'],
     ['documents', `Documents${docs.length ? ` (${docs.length})` : ''}`],
+    ['payments', `Payment Logs${paymentLogs.length ? ` (${paymentLogs.length})` : ''}`],
   ];
 
   return (
@@ -238,6 +241,116 @@ export default function StudentDetailPage() {
         </Card>
       )}
 
+      {/* Payment Logs */}
+      {tab === 'payments' && (
+        <Card
+          title="Payment Logs"
+          action={
+            fees.due > 0 ? (
+              <button onClick={openPay} className="btn-primary text-xs">
+                Collect fee
+              </button>
+            ) : null
+          }
+        >
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+              <span className="text-xs text-slate-500">Total Collected</span>
+              <div className="mt-1 text-lg font-bold text-emerald-600">{inr(fees.paid)}</div>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+              <span className="text-xs text-slate-500">Total Transactions</span>
+              <div className="mt-1 text-lg font-bold text-slate-800">{paymentLogs.length}</div>
+            </div>
+            <div className="col-span-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 sm:col-span-1">
+              <span className="text-xs text-slate-500">Latest Payment</span>
+              <div className="mt-1 text-sm font-bold text-slate-800">
+                {paymentLogs.length && paymentLogs[0].date ? fmtDate(paymentLogs[0].date) : '–'}
+              </div>
+            </div>
+          </div>
+
+          <Table
+            empty="No payment transactions recorded yet."
+            rows={paymentLogs}
+            cols={[
+              {
+                h: 'Receipt #',
+                render: (p) => (
+                  <span className="font-mono font-bold text-brand-700">
+                    {p.receiptNo}
+                  </span>
+                ),
+              },
+              {
+                h: 'Payment Date',
+                render: (p) => (
+                  <div>
+                    <span className="font-medium text-slate-800">{fmtDate(p.date)}</span>
+                    {p.date && (
+                      <span className="block text-[11px] text-slate-400">
+                        {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                h: 'Towards',
+                render: (p) => (
+                  <div>
+                    <span className="font-semibold text-slate-800">{p.plan || 'Installment'}</span>
+                    {p.month && <span className="block text-[11px] text-slate-400">{p.month}</span>}
+                    {p.installmentsCount > 1 && (
+                      <span className="mt-0.5 inline-block rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
+                        {p.installmentsCount} installments combined
+                      </span>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                h: 'Amount',
+                render: (p) => (
+                  <span className="font-extrabold text-emerald-600">{inr(p.amount)}</span>
+                ),
+              },
+              {
+                h: 'Mode',
+                render: (p) => (
+                  <Badge tone={p.mode === 'UPI' ? 'purple' : p.mode === 'Online' ? 'green' : 'orange'}>
+                    {p.mode || 'Cash'}
+                  </Badge>
+                ),
+              },
+              {
+                h: '',
+                render: (p) => (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedReceipt({
+                        receiptNo: p.receiptNo,
+                        amount: p.amount,
+                        name: s.name,
+                        class: s.course?.name ? `${s.course.name}${s.batch?.name ? ` · ${s.batch.name}` : ''}` : 'Class',
+                        date: fmtDate(p.date),
+                        mode: p.mode,
+                        plan: p.plan,
+                      })
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    <Printer className="h-3.5 w-3.5 text-slate-500" />
+                    Receipt
+                  </button>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      )}
+
       {/* Attendance */}
       {tab === 'attendance' && (
         <Card title="Attendance this month" action={<Link href="/attendance" className="text-sm font-semibold text-brand-600 hover:underline">Open attendance</Link>}>
@@ -308,6 +421,44 @@ export default function StudentDetailPage() {
               <button type="submit" className="btn-primary">Record payment</button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Receipt Modal */}
+      {selectedReceipt && (
+        <Modal open onClose={() => setSelectedReceipt(null)} title="Fee receipt" width="max-w-sm">
+          <div className="space-y-4 text-ink">
+            <div className="rounded-xl bg-brand-50/60 py-5 text-center">
+              <div className="text-xs text-ink-500">Amount received</div>
+              <div className="mt-1 text-3xl font-black text-brand-700">{inr(selectedReceipt.amount)}</div>
+            </div>
+            <dl className="grid grid-cols-2 gap-y-2.5 text-sm">
+              <dt className="text-ink-400">Receipt no.</dt>
+              <dd className="text-right font-mono font-semibold">{selectedReceipt.receiptNo}</dd>
+              <dt className="text-ink-400">Student</dt>
+              <dd className="text-right font-semibold">{selectedReceipt.name}</dd>
+              <dt className="text-ink-400">Class</dt>
+              <dd className="text-right font-semibold">{selectedReceipt.class}</dd>
+              {selectedReceipt.plan && (
+                <>
+                  <dt className="text-ink-400">Towards</dt>
+                  <dd className="text-right font-medium">{selectedReceipt.plan}</dd>
+                </>
+              )}
+              <dt className="text-ink-400">Date</dt>
+              <dd className="text-right font-semibold">{selectedReceipt.date}</dd>
+              <dt className="text-ink-400">Payment mode</dt>
+              <dd className="text-right">
+                <Badge tone={selectedReceipt.mode === 'UPI' ? 'purple' : 'green'}>{selectedReceipt.mode}</Badge>
+              </dd>
+            </dl>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button type="button" onClick={() => setSelectedReceipt(null)} className="btn border border-ink/10">Close</button>
+              <button type="button" onClick={() => window.print()} className="btn-primary">
+                <Printer className="h-4 w-4" /> Print
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
