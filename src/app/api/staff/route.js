@@ -6,31 +6,8 @@ import Staff from '@/models/Staff';
 import StaffAttendance from '@/models/StaffAttendance';
 import StaffLeave from '@/models/StaffLeave';
 
-const SEED_STAFF = [
-  { name: 'Neha Sharma', type: 'Teaching', role: 'Teacher', department: 'Academics', subjects: ['Mathematics'], assignedClasses: ['Class 8 A', 'Class 8 B'], phone: '+91 98765 43210', email: 'neha.sharma@example.com', salary: 35000, status: 'Active' },
-  { name: 'Rohit Verma', type: 'Teaching', role: 'Teacher', department: 'Academics', subjects: ['Science'], assignedClasses: ['Class 9 A'], phone: '+91 87654 32109', email: 'rohit.verma@example.com', salary: 38000, status: 'Active' },
-  { name: 'Priya Patel', type: 'Teaching', role: 'Teacher', department: 'Academics', subjects: ['English'], assignedClasses: ['Class 7 A', 'Class 7 B'], phone: '+91 99887 66554', email: 'priya.patel@example.com', salary: 32000, status: 'Active' },
-  { name: 'Amit Singh', type: 'Teaching', role: 'Teacher', department: 'Academics', subjects: ['Social Studies'], assignedClasses: ['Class 10 A'], phone: '+91 90123 45678', email: 'amit.singh@example.com', salary: 40000, status: 'Active' },
-  { name: 'Kavita Joshi', type: 'Teaching', role: 'Teacher', department: 'Academics', subjects: ['Hindi'], assignedClasses: ['Class 6 A', 'Class 6 B'], phone: '+91 94728 33011', email: 'kavita.joshi@example.com', salary: 30000, status: 'On Leave' },
-  { name: 'Ramesh Gupta', type: 'Non-Teaching', role: 'Accountant', department: 'Finance', subjects: [], assignedClasses: [], phone: '+91 98112 33445', email: 'ramesh.gupta@example.com', salary: 28000, status: 'Active' },
-  { name: 'Suman Roy', type: 'Non-Teaching', role: 'Librarian', department: 'Library', subjects: [], assignedClasses: [], phone: '+91 97234 55667', email: 'suman.roy@example.com', salary: 24000, status: 'Active' },
-  { name: 'Sunil Kumar', type: 'Non-Teaching', role: 'Lab Assistant', department: 'Operations', subjects: [], assignedClasses: [], phone: '+91 96321 88990', email: 'sunil.kumar@example.com', salary: 20000, status: 'Active' },
-  { name: 'Mahesh Yadav', type: 'Non-Teaching', role: 'Admin Staff', department: 'Administration', subjects: [], assignedClasses: [], phone: '+91 95432 11223', email: 'mahesh.yadav@example.com', salary: 22000, status: 'Active' },
-  { name: 'Pooja Verma', type: 'Teaching', role: 'Senior Teacher', department: 'Academics', subjects: ['Physics'], assignedClasses: ['Class 11 A', 'Class 12 A'], phone: '+91 91234 56780', email: 'pooja.verma@example.com', salary: 45000, status: 'Active' },
-];
-
 export const GET = wrap(async (req) => {
   await connectDB();
-  const count = await Staff.countDocuments();
-  if (count === 0) {
-    for (let i = 0; i < SEED_STAFF.length; i++) {
-      const s = SEED_STAFF[i];
-      const prefix = s.type === 'Teaching' ? 'TCH' : 'STF';
-      const staffId = await nextId('staff', prefix, 3);
-      await Staff.create({ ...s, staffId });
-    }
-  }
-
   const sp = new URL(req.url).searchParams;
   const q = {};
 

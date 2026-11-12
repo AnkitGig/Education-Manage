@@ -6,21 +6,6 @@ import Student from '@/models/Student';
 import Course from '@/models/Course';
 import Batch from '@/models/Batch';
 
-const SEED_STUDENTS = [
-  { roll: '001', name: 'Aarav Sharma', status: 'present' },
-  { roll: '002', name: 'Ananya Verma', status: 'present' },
-  { roll: '003', name: 'Rohan Mehta', status: 'absent' },
-  { roll: '004', name: 'Kavya Singh', status: 'present' },
-  { roll: '005', name: 'Aditya Gupta', status: 'late' },
-  { roll: '006', name: 'Ishita Patel', status: 'present' },
-  { roll: '007', name: 'Vivaan Joshi', status: 'present' },
-  { roll: '008', name: 'Diya Malhotra', status: 'halfday' },
-  { roll: '009', name: 'Aryan Choudhary', status: 'present' },
-  { roll: '010', name: 'Sneha Rao', status: 'present' },
-  { roll: '011', name: 'Kabir Kapoor', status: 'present' },
-  { roll: '012', name: 'Pooja Nair', status: 'present' },
-];
-
 export const GET = wrap(async (req) => {
   await connectDB();
   const sp = new URL(req.url).searchParams;
@@ -30,6 +15,20 @@ export const GET = wrap(async (req) => {
 
   // Get all active classes/courses for dropdown
   const allCourses = await Course.find({ status: { $ne: 'inactive' } }).sort({ name: 1 }).lean();
+
+  if (allCourses.length === 0) {
+    return NextResponse.json({
+      batchId: null,
+      courseId: null,
+      date,
+      className: '',
+      section: '',
+      classesList: [],
+      sectionsList: [],
+      students: [],
+      stats: { total: 0, present: 0, absent: 0, late: 0, halfDay: 0, rate: '0%', attendanceRate: 0 },
+    });
+  }
 
   // Find targeted course
   let course = null;
@@ -41,24 +40,24 @@ export const GET = wrap(async (req) => {
       ]
     });
   }
-  if (!course && allCourses.length > 0) {
-    course = allCourses[0];
-  }
   if (!course) {
-    course = await Course.create({ name: 'Class 8', durationMonths: 12 });
+    course = allCourses[0];
   }
 
   // Get all batches/sections for this course
-  let courseBatches = await Batch.find({ course: course._id }).sort({ name: 1 }).lean();
+  const courseBatches = await Batch.find({ course: course._id }).sort({ name: 1 }).lean();
   if (courseBatches.length === 0) {
-    const newB = await Batch.create({
-      course: course._id,
-      name: section ? (section.toLowerCase().startsWith('section') || section.toLowerCase().startsWith('batch') ? section : `Section ${section}`) : 'Section A',
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      startTime: '08:00',
-      endTime: '14:00',
+    return NextResponse.json({
+      batchId: null,
+      courseId: course._id,
+      date,
+      className: course.name,
+      section: '',
+      classesList: allCourses.map((c) => ({ _id: c._id, name: c.name })),
+      sectionsList: [],
+      students: [],
+      stats: { total: 0, present: 0, absent: 0, late: 0, halfDay: 0, rate: '0%', attendanceRate: 0 },
     });
-    courseBatches = [newB.toObject()];
   }
 
   // Match selected section
@@ -80,33 +79,8 @@ export const GET = wrap(async (req) => {
 
   // Fetch real students belonging to this batch or this course
   let students = await Student.find({ batch: batch._id, status: 'active' }).sort({ studentId: 1 }).lean();
-  
-  // If no students assigned directly to batch, check if assigned to course
   if (students.length === 0) {
     students = await Student.find({ course: course._id, status: 'active' }).sort({ studentId: 1 }).lean();
-    if (students.length > 0) {
-      // Auto-assign to this batch so future queries link cleanly
-      await Student.updateMany({ course: course._id, batch: null }, { batch: batch._id });
-    }
-  }
-
-  // If still empty (e.g. brand new class), seed standard 12 students so attendance is functional
-  if (students.length === 0) {
-    for (let i = 0; i < SEED_STUDENTS.length; i++) {
-      const s = SEED_STUDENTS[i];
-      const sid = `STD${s.roll}`;
-      await Student.create({
-        studentId: sid,
-        name: s.name,
-        course: course._id,
-        batch: batch._id,
-        mobile: `+91 98${i}${i}4 55667`,
-        parentName: `${s.name.split(' ')[1]} Senior`,
-        parentMobile: `+91 97${i}${i}1 22334`,
-        status: 'active',
-      });
-    }
-    students = await Student.find({ batch: batch._id, status: 'active' }).sort({ studentId: 1 }).lean();
   }
 
   // Find attendance record for this batch on this date
@@ -114,14 +88,13 @@ export const GET = wrap(async (req) => {
   const savedMap = Object.fromEntries((att?.records || []).map((r) => [String(r.student), r.status]));
 
   const records = students.map((s, idx) => {
-    const defaultStat = SEED_STUDENTS[idx % SEED_STUDENTS.length]?.status || 'present';
     return {
       _id: s._id,
       studentId: s.studentId,
       name: s.name,
       roll: s.studentId ? s.studentId.replace(/\D/g, '').padStart(3, '0') : String(idx + 1).padStart(3, '0'),
       photo: s.photo,
-      status: savedMap[String(s._id)] || defaultStat,
+      status: savedMap[String(s._id)] || 'present',
     };
   });
 

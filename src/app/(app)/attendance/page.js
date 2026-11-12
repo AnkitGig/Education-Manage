@@ -49,8 +49,8 @@ function AttendanceContent() {
   };
 
   const [date, setDate] = useState(todayKey());
-  const [selectedClass, setSelectedClass] = useState('Class 8');
-  const [section, setSection] = useState('A');
+  const [selectedClass, setSelectedClass] = useState('');
+  const [section, setSection] = useState('');
   const [mode, setMode] = useState('Manual');
   const [busy, setBusy] = useState(false);
   const [selectedAll, setSelectedAll] = useState(false);
@@ -68,15 +68,13 @@ function AttendanceContent() {
 
   // Sync selectedClass to the first available class if not yet valid
   useEffect(() => {
-    if (coursesData?.data?.length && !coursesData.data.some((c) => c.name === selectedClass)) {
+    if (coursesData?.data?.length && (!selectedClass || !coursesData.data.some((c) => c.name === selectedClass))) {
       setSelectedClass(coursesData.data[0].name);
     }
   }, [coursesData, selectedClass]);
 
   // Section options dynamically driven by backend for the chosen class
-  const sectionOptions = data?.sectionsList?.length
-    ? data.sectionsList
-    : [{ name: 'Section A', shortName: 'A' }, { name: 'Section B', shortName: 'B' }, { name: 'Section C', shortName: 'C' }];
+  const sectionOptions = data?.sectionsList?.length ? data.sectionsList : [];
 
   // Fetch staff attendance & leaves for sub-tabs
   const { data: staffAttData, mutate: mutateStaffAtt } = useApi(`/api/staff/attendance?date=${date}`);
@@ -91,13 +89,13 @@ function AttendanceContent() {
   }, [data]);
 
   const stats = data?.stats || {
-    total: 32,
-    present: 28,
-    absent: 2,
-    late: 1,
-    halfDay: 1,
-    rate: '87.5%',
-    attendanceRate: 87.5,
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    halfDay: 0,
+    rate: '0%',
+    attendanceRate: 0,
   };
 
   const setStatus = (id, status) => {
@@ -230,11 +228,7 @@ function AttendanceContent() {
                     </option>
                   ))}
                   {classList.length === 0 && (
-                    <>
-                      <option value="Class 8">Class 8</option>
-                      <option value="Class 10">Class 10</option>
-                      <option value="Class 12">Class 12</option>
-                    </>
+                    <option value="">No classes</option>
                   )}
                 </select>
               </div>
@@ -252,6 +246,9 @@ function AttendanceContent() {
                       {s.shortName || s.name}
                     </option>
                   ))}
+                  {sectionOptions.length === 0 && (
+                    <option value="">No sections</option>
+                  )}
                 </select>
               </div>
 
