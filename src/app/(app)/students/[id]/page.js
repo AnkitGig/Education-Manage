@@ -172,7 +172,15 @@ export default function StudentDetailPage() {
             empty="No fee records yet."
             rows={fees.records}
             cols={[
-              { h: 'Month', render: (r) => <span className="font-semibold text-ink">{r.month || '–'}</span> },
+              {
+                h: 'Month / Installment',
+                render: (r) => (
+                  <div>
+                    <span className="font-semibold text-ink">{r.plan || r.month || '–'}</span>
+                    {r.plan && r.month && <span className="block text-[11px] text-ink-400">{r.month}</span>}
+                  </div>
+                ),
+              },
               { h: 'Due date', render: (r) => fmtDate(r.dueDate) },
               { h: 'Amount', render: (r) => inr(r.amount) },
               { h: 'Paid', render: (r) => <span className="font-semibold text-emerald-600">{inr(r.paid)}</span> },
@@ -180,16 +188,50 @@ export default function StudentDetailPage() {
               { h: 'Status', render: (r) => <StatusBadge s={r.status} /> },
               {
                 h: 'Payments',
-                render: (r) =>
-                  r.payments?.length ? (
-                    <div className="space-y-0.5 text-xs text-ink-500">
-                      {r.payments.map((p, i) => (
-                        <div key={i}>{inr(p.amount)} · {p.mode}{p.receiptNo ? ` · #${p.receiptNo}` : ''}</div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-ink-400">–</span>
-                  ),
+                render: (r) => {
+                  if (r.payments?.length) {
+                    return (
+                      <div className="space-y-1 text-xs">
+                        {r.payments.map((p, i) => (
+                          <div key={i} className="flex flex-wrap items-center gap-1.5 text-slate-700">
+                            <span className="font-bold text-emerald-600">{inr(p.amount)}</span>
+                            <span>•</span>
+                            <span className="font-medium">{p.mode || 'Cash'}</span>
+                            {p.date && (
+                              <>
+                                <span>•</span>
+                                <span className="font-semibold text-slate-600">
+                                  {fmtDate(p.date)}
+                                </span>
+                              </>
+                            )}
+                            {p.receiptNo && (
+                              <span className="font-mono text-[11px] text-slate-400">
+                                #{p.receiptNo}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  if (r.paid > 0) {
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-700">
+                        <span className="font-bold text-emerald-600">{inr(r.paid)}</span>
+                        {r.updatedAt && (
+                          <>
+                            <span>•</span>
+                            <span className="font-semibold text-slate-600">
+                              {fmtDate(r.updatedAt)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  }
+                  return <span className="text-xs text-ink-400">–</span>;
+                },
               },
             ]}
           />

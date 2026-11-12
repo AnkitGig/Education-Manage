@@ -748,8 +748,28 @@ function FeesContent() {
                       <span className="text-sm font-semibold text-slate-800">{inst.plan || `Installment ${idx + 1}`}</span>
                       <StatusBadge s={inst.status} />
                     </div>
-                    <div className="text-xs text-slate-400">
-                      Due: {inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '–'}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+                      {inst.dueDate && (
+                        <span>
+                          Due: {new Date(inst.dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                      {inst.status === 'paid' && inst.paidAt && (
+                        <span className="font-semibold text-emerald-600">
+                          • Paid on: {new Date(inst.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {inst.paidMode ? ` (${inst.paidMode})` : ''}
+                        </span>
+                      )}
+                      {inst.status !== 'paid' && inst.paid > 0 && inst.paidAt && (
+                        <span className="font-medium text-amber-600">
+                          • Partial paid: {new Date(inst.paidAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                      {inst.receiptNo && (
+                        <span className="font-mono text-[11px] text-slate-400">
+                          • {inst.receiptNo}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

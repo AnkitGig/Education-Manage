@@ -39,6 +39,15 @@ export const GET = wrap(async (req) => {
     const sid = String(r.student);
     if (!recordMap[sid]) recordMap[sid] = [];
     const due = Math.max(0, (r.amount || 0) - (r.paid || 0));
+
+    // Extract last payment info
+    const lastPayment = Array.isArray(r.payments) && r.payments.length > 0
+      ? r.payments[r.payments.length - 1]
+      : null;
+    const paidAt = lastPayment?.date || (r.paid > 0 ? (r.updatedAt || r.createdAt) : null);
+    const paidMode = lastPayment?.mode || null;
+    const receiptNo = lastPayment?.receiptNo || null;
+
     recordMap[sid].push({
       _id: r._id,
       plan: r.plan,
@@ -48,12 +57,17 @@ export const GET = wrap(async (req) => {
       due,
       dueDate: r.dueDate,
       status: feeStatus(r),
+      paidAt,
+      paidMode,
+      receiptNo,
       payments: r.payments || [],
     });
   });
 
   let summaries = students.map((s) => {
-    const sRecords = recordMap[String(s._id)] || [];
+    const sRecords = (recordMap[String(s._id)] || []).sort(
+      (a, b) => new Date(a.dueDate || 0) - new Date(b.dueDate || 0)
+    );
     const total = sRecords.reduce((sum, r) => sum + r.amount, 0) || (s.feeAmount || 0);
     const paid = sRecords.reduce((sum, r) => sum + r.paid, 0);
     const due = Math.max(0, total - paid);
