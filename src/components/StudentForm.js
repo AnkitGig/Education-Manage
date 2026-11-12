@@ -2,21 +2,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Upload, Trash2, FileText, Check } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, FileText, Check, Receipt } from 'lucide-react';
 import { useApi, api, run, upload, toast } from '@/lib/client';
 import { Field, Card, cn, inr, Avatar } from './ui';
 
-const STEPS = ['Student', 'Class', 'Fees', 'Review'];
-const PLANS = [
-  ['monthly', 'Monthly', 1],
-  ['quarterly', 'Quarterly', 3],
-  ['half_yearly', 'Half-yearly', 6],
-  ['yearly', 'Yearly', 12],
-];
+const STEPS = ['Student', 'Class', 'Review'];
 const EMPTY = {
   name: '', dob: '', gender: 'Male', bloodGroup: '', mobile: '',
   parentName: '', parentRelation: 'Father', parentMobile: '', email: '', address: '',
-  photo: null, documents: [], course: '', batch: '', feePlan: 'monthly', feeAmount: 0, status: 'active',
+  photo: null, documents: [], course: '', batch: '', feePlan: 'yearly', feeAmount: 0, status: 'active',
 };
 const digits = (v) => (v || '').replace(/\D/g, '').slice(-10);
 
@@ -46,10 +40,27 @@ export default function StudentForm({ initial }) {
 
   const { data: courses } = useApi('/api/courses');
   const { data: batches } = useApi(f.course ? `/api/batches?course=${f.course}` : null);
+  const { data: structuresData } = useApi('/api/fees/structures');
+
   const course = courses?.data?.find((c) => c._id === f.course);
   const batch = batches?.data?.find((b) => b._id === f.batch);
-  const feeOf = (plan) => course?.fees?.find((x) => x.plan === plan)?.amount || 0;
-  const pickPlan = (plan) => setF((x) => ({ ...x, feePlan: plan, feeAmount: feeOf(plan) }));
+
+  // Match the fee structure defined for this class & section
+  const structures = structuresData?.data || [];
+  const matchingStructure =
+    structures.find(
+      (s) =>
+        String(s.course?._id || s.course) === String(f.course) &&
+        s.section &&
+        batch?.name &&
+        s.section.toLowerCase() === batch.name.toLowerCase()
+    ) ||
+    structures.find(
+      (s) =>
+        String(s.course?._id || s.course) === String(f.course) &&
+        (!s.section || s.section === 'All')
+    ) ||
+    structures.find((s) => String(s.course?._id || s.course) === String(f.course));
 
   const uploadFile = (folder, onDone) => async (e) => {
     const file = e.target.files[0];
@@ -76,13 +87,17 @@ export default function StudentForm({ initial }) {
   const next = () => {
     const err = validate();
     if (err) return toast(err, 'error');
-    if (step === 1) pickPlan(f.feePlan);
     setStep(step + 1);
   };
 
   const save = async () => {
     setBusy(true);
-    const body = { ...f };
+    const body = {
+      ...f,
+      feeStructureId: matchingStructure?._id || null,
+      feeAmount: matchingStructure ? matchingStructure.total : f.feeAmount || 0,
+      feePlan: matchingStructure ? (matchingStructure.frequency || 'yearly') : (f.feePlan || 'yearly'),
+    };
     if (!body.dob) delete body.dob;
     const r = await run(
       () => (initial ? api(`/api/students/${initial._id}`, 'PUT', body) : api('/api/students', 'POST', body)),
@@ -96,7 +111,9 @@ export default function StudentForm({ initial }) {
     ['Student', `${f.name} · ${f.gender}${f.dob ? ` · ${f.dob}` : ''}`, 0],
     ['Parent', `${f.parentName} (${f.parentRelation}) · ${f.parentMobile}`, 0],
     ['Class', `${course?.name || '–'} · ${batch?.name || '–'}`, 1],
-    ['Fee plan', `${PLANS.find((p) => p[0] === f.feePlan)?.[1]} · ${inr(f.feeAmount)}`, 2],
+    ...(matchingStructure
+      ? [['Fee Structure', `${matchingStructure.name || `${course?.name || ''} - Regular`} (${inr(matchingStructure.total)})`, 1]]
+      : [['Fee Structure', 'No structure configured (Default ₹0)', 1]]),
     ['Documents', f.documents.length ? `${f.documents.length} attached` : 'None', 0],
   ];
 
@@ -110,8 +127,8 @@ export default function StudentForm({ initial }) {
         <h1 className="text-2xl font-bold text-ink">{initial ? `Edit ${initial.name}` : 'New admission'}</h1>
       </div>
 
-      {/* Stepper */}
-      <ol className="grid grid-cols-4 gap-2">
+      {/* Stepper (3 Steps: Student, Class, Review) */}
+      <ol className="grid grid-cols-3 gap-2">
         {STEPS.map((s, i) => (
           <li key={s}>
             <button
@@ -214,7 +231,7 @@ export default function StudentForm({ initial }) {
         </div>
       )}
 
-      {/* Step 2 – Class */}
+      {/* Step 2 – Class & Section */}
       {step === 1 && (
         <Card>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -222,7 +239,7 @@ export default function StudentForm({ initial }) {
               <select
                 className="inp"
                 value={f.course}
-                onChange={(e) => setF({ ...f, course: e.target.value, batch: '', feeAmount: 0 })}
+                onChange={(e) => setF({ ...f, course: e.target.value, batch: '' })}
               >
                 <option value="">Select class</option>
                 {courses?.data?.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
@@ -244,6 +261,50 @@ export default function StudentForm({ initial }) {
               </select>
             </Field>
           </div>
+
+          {/* Automatic Fee Structure preview */}
+          {f.course && (
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              {matchingStructure ? (
+                <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                        <Receipt className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">Applied Fee Structure</span>
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">Active</span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-800">
+                          {matchingStructure.name || `${course?.name || ''} - Regular`}
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          {matchingStructure.enableInstallments && matchingStructure.installments?.length
+                            ? `${matchingStructure.installments.length} Installments`
+                            : 'Annual / Single payment'}
+                          {matchingStructure.section ? ` · Section: ${matchingStructure.section}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-extrabold text-slate-900">{inr(matchingStructure.total)}</div>
+                      <div className="text-[11px] text-slate-500">Auto-configured</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-center">
+                  <p className="text-xs text-slate-500">
+                    No custom fee structure found for this class. Fees will follow institute defaults configured in{' '}
+                    <Link href="/fees" className="font-semibold text-brand-600 underline">Fees &amp; Payments</Link>.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           {courses && !courses.data?.length && (
             <p className="mt-4 text-sm text-amber-700">
               No classes yet. <Link href="/courses" className="font-semibold underline">Add a class and section</Link> first.
@@ -252,42 +313,20 @@ export default function StudentForm({ initial }) {
         </Card>
       )}
 
-      {/* Step 3 – Fees */}
+      {/* Step 3 – Review */}
       {step === 2 && (
-        <Card>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {PLANS.map(([k, label, months]) => (
-              <label
-                key={k}
-                className={cn(
-                  'cursor-pointer rounded-xl border p-4 transition',
-                  f.feePlan === k ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500' : 'border-ink/10 hover:bg-ink-50'
-                )}
-              >
-                <input type="radio" name="plan" className="sr-only" checked={f.feePlan === k} onChange={() => pickPlan(k)} />
-                <div className="font-semibold text-ink">{label}</div>
-                <div className="mt-1 text-lg font-bold text-ink">{inr(feeOf(k))}</div>
-                <div className="text-xs text-ink-400">every {months === 1 ? 'month' : `${months} months`}</div>
-              </label>
-            ))}
-          </div>
-          <Field label="Amount (edit to give a discount)" className="mt-5 max-w-xs">
-            <input type="number" min="0" className="inp" value={f.feeAmount} onChange={(e) => setF({ ...f, feeAmount: Number(e.target.value) })} />
-          </Field>
-        </Card>
-      )}
-
-      {/* Step 4 – Review */}
-      {step === 3 && (
         <Card>
           <div className="mb-4 flex items-center gap-3 border-b border-ink/[.06] pb-4">
             <Avatar src={f.photo?.url} name={f.name} size={56} />
-            <div className="text-lg font-bold text-ink">{f.name}</div>
+            <div>
+              <div className="text-lg font-bold text-ink">{f.name}</div>
+              <div className="text-xs text-ink-400">{course?.name} · {batch?.name}</div>
+            </div>
           </div>
           <dl className="divide-y divide-ink/[.06] text-sm">
             {review.map(([k, v, s]) => (
               <div key={k} className="flex items-center justify-between gap-4 py-3">
-                <dt className="w-24 shrink-0 text-ink-400">{k}</dt>
+                <dt className="w-28 shrink-0 text-ink-400">{k}</dt>
                 <dd className="flex-1 font-medium text-ink">{v}</dd>
                 <button type="button" onClick={() => setStep(s)} className="text-xs font-semibold text-brand-600 hover:underline">Edit</button>
               </div>
@@ -303,7 +342,7 @@ export default function StudentForm({ initial }) {
         ) : (
           <button type="button" className="btn border border-ink/10 bg-white" onClick={() => setStep(step - 1)}>Back</button>
         )}
-        {step < 3 ? (
+        {step < 2 ? (
           <button type="button" className="btn-primary" onClick={next}>Continue</button>
         ) : (
           <button type="button" className="btn-primary" disabled={busy} onClick={save}>

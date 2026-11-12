@@ -3,6 +3,8 @@ import { wrap, bad } from '@/lib/crud';
 import { esc, nextId, curMonth } from '@/lib/utils';
 import Student from '@/models/Student';
 import FeeRecord from '@/models/FeeRecord';
+import Batch from '@/models/Batch';
+import FeeStructure from '@/models/FeeStructure';
 
 export const GET = wrap(async (req) => {
   const sp = new URL(req.url).searchParams;
@@ -34,16 +36,72 @@ export const GET = wrap(async (req) => {
 
 export const POST = wrap(async (req) => {
   const body = await req.json();
-  if (!body.name || !body.parentName || !body.parentMobile || !body.course || !body.batch) return bad('Please fill all required fields');
-  const student = await Student.create({ ...body, studentId: await nextId('student', 'STU', 4) });
-  // first fee record is due 7 days after admission
-  if (student.feeAmount > 0) {
-    const adm = new Date(student.admissionDate);
+  if (!body.name || !body.parentName || !body.parentMobile || !body.course || !body.batch) {
+    return bad('Please fill all required fields');
+  }
+
+  // Look up matching Fee Structure created for this class & section
+  const batch = await Batch.findById(body.batch).lean();
+  let feeStructure = null;
+  if (body.feeStructureId) {
+    feeStructure = await FeeStructure.findById(body.feeStructureId).lean();
+  }
+  if (!feeStructure && batch) {
+    feeStructure = await FeeStructure.findOne({
+      course: body.course,
+      section: batch.name,
+      isActive: { $ne: false },
+    }).lean();
+  }
+  if (!feeStructure) {
+    feeStructure = await FeeStructure.findOne({
+      course: body.course,
+      section: { $in: ['All', '', null] },
+      isActive: { $ne: false },
+    }).lean();
+  }
+  if (!feeStructure) {
+    feeStructure = await FeeStructure.findOne({
+      course: body.course,
+      isActive: { $ne: false },
+    }).sort({ createdAt: -1 }).lean();
+  }
+
+  const feeAmount = feeStructure ? feeStructure.total : Number(body.feeAmount) || 0;
+  const feePlan = feeStructure ? (feeStructure.frequency || 'yearly') : (body.feePlan || 'yearly');
+
+  const student = await Student.create({
+    ...body,
+    feeAmount,
+    feePlan,
+    studentId: await nextId('student', 'STU', 4),
+  });
+
+  const adm = new Date(student.admissionDate);
+
+  // If the fee structure defines installments, generate a record for each installment
+  if (feeStructure?.enableInstallments && Array.isArray(feeStructure.installments) && feeStructure.installments.length > 0) {
+    for (const inst of feeStructure.installments) {
+      const dueDate = inst.dueDate ? new Date(inst.dueDate) : new Date(adm.getTime() + 7 * 864e5);
+      await FeeRecord.create({
+        student: student._id,
+        month: curMonth(dueDate),
+        plan: inst.name || 'Installment',
+        amount: Number(inst.amount) || 0,
+        dueDate,
+      });
+    }
+  } else if (feeAmount > 0) {
+    // Single fee record
     await FeeRecord.create({
-      student: student._id, month: curMonth(adm), plan: student.feePlan, amount: student.feeAmount,
+      student: student._id,
+      month: curMonth(adm),
+      plan: feePlan,
+      amount: feeAmount,
       dueDate: new Date(adm.getTime() + 7 * 864e5),
     });
   }
+
   return NextResponse.json(student, { status: 201 });
 });
 
