@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Trash2, Phone, Mail, MessageCircle, FileText, ExternalLink, Upload, Printer, Receipt } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Phone, Mail, MessageCircle, FileText, ExternalLink, Upload, Printer, Receipt, CheckCircle2, Loader2 } from 'lucide-react';
 import { useApi, api, run, fmtDate } from '@/lib/client';
 import { StatusBadge, Badge, Avatar, Card, Spinner, Modal, Field, Tabs, Table, inr } from '@/components/ui';
 
@@ -36,6 +36,8 @@ export default function StudentDetailPage() {
   const router = useRouter();
   const [tab, setTab] = useState('profile');
   const [payOpen, setPayOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(null);
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState('UPI');
   const [selectedReceipt, setSelectedReceipt] = useState(null);
@@ -50,7 +52,19 @@ export default function StudentDetailPage() {
   const att = summary?.attendance || { present: 0, absent: 0, late: 0, total: 0, percent: 0 };
   const docs = s.documents || [];
 
-  const openPay = () => { setAmount(String(fees.due || '')); setPayOpen(true); };
+  const openPay = () => {
+    setAmount(String(fees.due || ''));
+    setPaymentSuccess(null);
+    setPaying(false);
+    setPayOpen(true);
+  };
+
+  const closePayModal = () => {
+    setPayOpen(false);
+    setPaymentSuccess(null);
+    setAmount('');
+    setPaying(false);
+  };
 
   const remove = async () => {
     if (!confirm(`Delete ${s.name}? This can’t be undone.`)) return;
@@ -60,12 +74,24 @@ export default function StudentDetailPage() {
 
   const collect = async (e) => {
     e.preventDefault();
-    if (!(Number(amount) > 0)) return;
+    const payAmt = Number(amount);
+    if (!(payAmt > 0) || paying) return;
+    setPaying(true);
     const r = await run(
-      () => api('/api/fees/collect', 'POST', { student: id, amount: Number(amount), mode }),
+      () => api('/api/fees/collect', 'POST', { student: id, amount: payAmt, mode }),
       'Payment recorded'
     );
-    if (r) { setPayOpen(false); setAmount(''); mutateSummary(); }
+    setPaying(false);
+    if (r) {
+      mutateSummary();
+      setPaymentSuccess({
+        amount: payAmt,
+        mode,
+        receiptNo: r.receiptNo || 'RCP' + String(Date.now()).slice(-5),
+        studentName: s?.name,
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      });
+    }
   };
 
   const remind = () =>
@@ -400,27 +426,127 @@ export default function StudentDetailPage() {
 
       {/* Collect fee */}
       {payOpen && (
-        <Modal open onClose={() => setPayOpen(false)} title="Collect fee" width="max-w-md">
-          <form onSubmit={collect} className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl bg-ink-50/60 px-4 py-3 text-sm">
-              <span className="text-ink-500">Amount due</span>
-              <b className="text-rose-600">{inr(fees.due)}</b>
+        <Modal open onClose={closePayModal} title={paymentSuccess ? 'Payment Successful' : 'Collect fee'} width="max-w-md">
+          {paymentSuccess ? (
+            <div className="space-y-4 py-2 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 animate-in zoom-in-75 duration-200">
+                <CheckCircle2 className="h-9 w-9" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-ink">Payment Done!</h3>
+                <p className="text-xs text-ink-500">Fee payment has been recorded successfully.</p>
+              </div>
+
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3.5 text-left space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-500">Amount Received</span>
+                  <span className="text-base font-bold text-emerald-700">{inr(paymentSuccess.amount)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-500">Receipt No.</span>
+                  <span className="font-mono font-semibold text-ink">{paymentSuccess.receiptNo}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-500">Payment Mode</span>
+                  <span className="font-medium text-ink">{paymentSuccess.mode}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-500">Student</span>
+                  <span className="font-medium text-ink">{paymentSuccess.studentName}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-500">Date</span>
+                  <span className="text-ink-600">{paymentSuccess.date}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rc = {
+                      receiptNo: paymentSuccess.receiptNo,
+                      amount: paymentSuccess.amount,
+                      mode: paymentSuccess.mode,
+                      name: paymentSuccess.studentName,
+                      class: s.course?.name || 'Class',
+                      date: paymentSuccess.date,
+                    };
+                    closePayModal();
+                    setSelectedReceipt(rc);
+                  }}
+                  className="btn-outline text-xs"
+                >
+                  <Receipt className="h-3.5 w-3.5" /> View receipt
+                </button>
+                <button
+                  type="button"
+                  onClick={closePayModal}
+                  className="btn-primary min-w-[100px] text-xs"
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Amount (₹)" required>
-                <input type="number" min="1" max={fees.due || undefined} required className="inp" value={amount} onChange={(e) => setAmount(e.target.value)} />
-              </Field>
-              <Field label="Mode">
-                <select className="inp" value={mode} onChange={(e) => setMode(e.target.value)}>
-                  {MODES.map((m) => <option key={m}>{m}</option>)}
-                </select>
-              </Field>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <button type="button" onClick={() => setPayOpen(false)} className="btn-outline">Cancel</button>
-              <button type="submit" className="btn-primary">Record payment</button>
-            </div>
-          </form>
+          ) : (
+            <form onSubmit={collect} className="space-y-4">
+              <div className="flex items-center justify-between rounded-xl bg-ink-50/60 px-4 py-3 text-sm">
+                <span className="text-ink-500">Amount due</span>
+                <b className="text-rose-600">{inr(fees.due)}</b>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Amount (₹)" required>
+                  <input
+                    type="number"
+                    min="1"
+                    max={fees.due || undefined}
+                    required
+                    disabled={paying}
+                    className="inp font-semibold"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    autoFocus
+                  />
+                </Field>
+                <Field label="Mode">
+                  <select
+                    className="inp"
+                    disabled={paying}
+                    value={mode}
+                    onChange={(e) => setMode(e.target.value)}
+                  >
+                    {MODES.map((m) => (
+                      <option key={m}>{m}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={paying}
+                  onClick={closePayModal}
+                  className="btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={paying || !(Number(amount) > 0)}
+                  className="btn-primary min-w-[140px] inline-flex items-center justify-center gap-2"
+                >
+                  {paying ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Recording...</span>
+                    </>
+                  ) : (
+                    <span>Record payment</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
         </Modal>
       )}
 

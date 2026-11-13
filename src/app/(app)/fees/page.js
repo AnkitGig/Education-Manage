@@ -3,7 +3,7 @@ import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Wallet, AlertTriangle, CheckCircle2, Download, Plus, Search,
-  MessageCircle, Printer, Pencil, Copy, Trash2, X, ChevronRight,
+  MessageCircle, Printer, Pencil, Copy, Trash2, X, ChevronRight, Loader2,
 } from 'lucide-react';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -102,6 +102,7 @@ function FeesContent() {
   const [receiptMode, setReceiptMode] = useState('');
 
   const [collectOpen, setCollectOpen] = useState(false);
+  const [collecting, setCollecting] = useState(false);
   const [sid, setSid] = useState('');
   const [pay, setPay] = useState({ amount: '', mode: 'UPI' });
   const [receipt, setReceipt] = useState(null);
@@ -145,12 +146,15 @@ function FeesContent() {
   const openCollect = (student = '', amount = '') => {
     setSid(student);
     setPay({ amount: String(amount || ''), mode: 'UPI' });
+    setCollecting(false);
     setCollectOpen(true);
   };
 
   const collect = async () => {
-    if (!sid || !pay.amount) return;
+    if (!sid || !pay.amount || collecting) return;
+    setCollecting(true);
     const r = await run(() => api('/api/fees/collect', 'POST', { student: sid, ...pay }), 'Payment collected');
+    setCollecting(false);
     if (r) {
       setCollectOpen(false);
       mutateFees?.();
@@ -704,9 +708,10 @@ function FeesContent() {
             </div>
 
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-              <button onClick={() => setCollectOpen(false)} className="btn border border-ink/10">Cancel</button>
-              <button disabled={!sid || !pay.amount || Number(pay.amount) <= 0} onClick={collect} className="btn-primary">
-                Collect &amp; Generate Receipt
+              <button disabled={collecting} onClick={() => setCollectOpen(false)} className="btn border border-ink/10">Cancel</button>
+              <button disabled={collecting || !sid || !pay.amount || Number(pay.amount) <= 0} onClick={collect} className="btn-primary inline-flex items-center gap-2">
+                {collecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                <span>{collecting ? 'Processing...' : 'Collect & Generate Receipt'}</span>
               </button>
             </div>
           </div>
