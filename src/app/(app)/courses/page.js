@@ -19,14 +19,13 @@ function CourseModal({ initial, onClose, onSaved }) {
     initial || { name: '', board: 'CBSE', durationMonths: 12, status: 'active', fees: [] }
   );
   const [busy, setBusy] = useState(false);
-  const fee = (plan) => v.fees?.find((x) => x.plan === plan)?.amount || '';
 
   const save = async () => {
     if (!v.name.trim()) return;
     setBusy(true);
     const body = {
       ...v,
-      fees: PLANS.map(([plan, , months]) => ({ plan, months, amount: Number(fee(plan)) || 0 })),
+      fees: initial?.fees || v.fees || [],
     };
     const r = await run(
       () => (initial ? api(`/api/courses/${initial._id}`, 'PUT', body) : api('/api/courses', 'POST', body)),
@@ -35,12 +34,6 @@ function CourseModal({ initial, onClose, onSaved }) {
     setBusy(false);
     if (r) { onSaved(r); onClose(); }
   };
-
-  const setFee = (plan, amount) =>
-    setV({
-      ...v,
-      fees: PLANS.map(([p, , m]) => ({ plan: p, months: m, amount: p === plan ? amount : fee(p) })),
-    });
 
   return (
     <Modal open onClose={onClose} title={initial ? 'Edit class' : 'New class'}>
@@ -54,16 +47,6 @@ function CourseModal({ initial, onClose, onSaved }) {
         <Field label="Duration (months)">
           <input type="number" min="1" className="inp" value={v.durationMonths} onChange={(e) => setV({ ...v, durationMonths: Number(e.target.value) })} />
         </Field>
-        <div className="sm:col-span-2">
-          <div className="mb-2 text-sm font-semibold text-ink">Fees (₹)</div>
-          <div className="grid grid-cols-2 gap-3">
-            {PLANS.map(([p, label]) => (
-              <Field key={p} label={label}>
-                <input type="number" min="0" className="inp" value={fee(p)} onChange={(e) => setFee(p, e.target.value)} />
-              </Field>
-            ))}
-          </div>
-        </div>
       </div>
       <div className="mt-5 flex justify-end gap-2">
         <button className="btn border border-ink/10" onClick={onClose}>Cancel</button>
