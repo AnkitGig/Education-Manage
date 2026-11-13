@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { wrap, bad } from '@/lib/crud';
-import { esc, nextId, curMonth } from '@/lib/utils';
+import { esc, nextId } from '@/lib/utils';
 import Student from '@/models/Student';
 import FeeRecord from '@/models/FeeRecord';
 import Batch from '@/models/Batch';
 import FeeStructure from '@/models/FeeStructure';
+import { syncStudentFeeRecords } from '@/lib/feeRecords';
 
 export const GET = wrap(async (req) => {
   const sp = new URL(req.url).searchParams;
@@ -74,33 +75,11 @@ export const POST = wrap(async (req) => {
     ...body,
     feeAmount,
     feePlan,
+    feeStructureId: feeStructure?._id || body.feeStructureId || null,
     studentId: await nextId('student', 'STU', 4),
   });
 
-  const adm = new Date(student.admissionDate);
-
-  // If the fee structure defines installments, generate a record for each installment
-  if (feeStructure?.enableInstallments && Array.isArray(feeStructure.installments) && feeStructure.installments.length > 0) {
-    for (const inst of feeStructure.installments) {
-      const dueDate = inst.dueDate ? new Date(inst.dueDate) : new Date(adm.getTime() + 7 * 864e5);
-      await FeeRecord.create({
-        student: student._id,
-        month: curMonth(dueDate),
-        plan: inst.name || 'Installment',
-        amount: Number(inst.amount) || 0,
-        dueDate,
-      });
-    }
-  } else if (feeAmount > 0) {
-    // Single fee record
-    await FeeRecord.create({
-      student: student._id,
-      month: curMonth(adm),
-      plan: feePlan,
-      amount: feeAmount,
-      dueDate: new Date(adm.getTime() + 7 * 864e5),
-    });
-  }
+  await syncStudentFeeRecords(student);
 
   return NextResponse.json(student, { status: 201 });
 });

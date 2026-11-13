@@ -3,14 +3,18 @@ import { wrap } from '@/lib/crud';
 import { curMonth, feeStatus } from '@/lib/utils';
 import FeeRecord from '@/models/FeeRecord';
 import Attendance from '@/models/Attendance';
+import { syncStudentFeeRecords } from '@/lib/feeRecords';
 
 // Fee + attendance summary for one student (used by profile panels)
 export const GET = wrap(async (_, { params }) => {
   const id = params.id;
-  const [recs, att] = await Promise.all([
-    FeeRecord.find({ student: id }).sort({ dueDate: 1 }).lean(),
-    Attendance.find({ date: { $regex: `^${curMonth()}` }, 'records.student': id }).lean(),
-  ]);
+  let recs = await FeeRecord.find({ student: id }).sort({ dueDate: 1 }).lean();
+  if (recs.length === 0) {
+    await syncStudentFeeRecords(id);
+    recs = await FeeRecord.find({ student: id }).sort({ dueDate: 1 }).lean();
+  }
+  const att = await Attendance.find({ date: { $regex: `^${curMonth()}` }, 'records.student': id }).lean();
+
   const total = recs.reduce((s, r) => s + r.amount, 0);
   const paid = recs.reduce((s, r) => s + r.paid, 0);
   const next = recs.find((r) => r.paid < r.amount);

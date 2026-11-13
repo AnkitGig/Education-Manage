@@ -6,9 +6,11 @@ import Course from '@/models/Course';
 import FeeStructure from '@/models/FeeStructure';
 import Student from '@/models/Student';
 import { curMonth, feeStatus } from '@/lib/utils';
+import { syncAllMissingFeeRecords } from '@/lib/feeRecords';
 
 export const GET = wrap(async () => {
   await connectDB();
+  await syncAllMissingFeeRecords();
 
   const now = new Date();
   const currentMonthStr = curMonth(); // YYYY-MM

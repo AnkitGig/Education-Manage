@@ -3,8 +3,10 @@ import { wrap } from '@/lib/crud';
 import { esc, feeStatus } from '@/lib/utils';
 import FeeRecord from '@/models/FeeRecord';
 import Student from '@/models/Student';
+import { syncAllMissingFeeRecords } from '@/lib/feeRecords';
 
 export const GET = wrap(async (req) => {
+  await syncAllMissingFeeRecords();
   const sp = new URL(req.url).searchParams;
   const page = +sp.get('page') || 1, limit = +sp.get('limit') || 10;
   const statusFilter = sp.get('status'); // 'all', 'paid', 'due', 'partial'

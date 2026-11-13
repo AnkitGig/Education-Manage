@@ -3,6 +3,7 @@ import { wrap } from '@/lib/crud';
 import { connectDB } from '@/lib/db';
 import FeeStructure from '@/models/FeeStructure';
 import Course from '@/models/Course';
+import { syncAllMissingFeeRecords } from '@/lib/feeRecords';
 
 export const GET = wrap(async () => {
   await connectDB();
@@ -101,6 +102,9 @@ export const POST = wrap(async (req) => {
     existingFees.push({ plan: planName, amount: total, months: 12 });
   }
   await Course.findByIdAndUpdate(courseId, { fees: existingFees });
+
+  // Sync fee records for any students in this course who do not have fee records yet
+  await syncAllMissingFeeRecords(courseId);
 
   return NextResponse.json(feeStructure, { status: 201 });
 });
