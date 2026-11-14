@@ -22,7 +22,7 @@ import {
   X
 } from 'lucide-react';
 import { useApi, api, run, todayKey, downloadCSV } from '@/lib/client';
-import { Avatar, Badge, StatusBadge, Spinner, Card } from '@/components/ui';
+import { Avatar, Badge, StatusBadge, Spinner, Card, PageHeader } from '@/components/ui';
 
 const TABS = [
   { id: 'students', label: 'Student Attendance', sub: 'Mark Daily Attendance', icon: Users },
@@ -133,31 +133,12 @@ function AttendanceContent() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-        <Link href="/dashboard" className="hover:text-royal">Home</Link>
-        <span>›</span>
-        <span className="text-slate-700">Attendance</span>
-        <span>›</span>
-        <span className="font-semibold text-royal">
-          {TABS.find((t) => t.id === tab)?.label}
-        </span>
-      </div>
-
       {/* Header title */}
-      <div className="flex items-center gap-3.5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-royal/10 text-royal">
-          <CalendarCheck className="h-6 w-6" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-navy">
-            {TABS.find((t) => t.id === tab)?.label}
-          </h1>
-          <p className="text-sm text-slate-500">
-            Mark, track and manage attendance records and daily activity
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={CalendarCheck}
+        title={TABS.find((t) => t.id === tab)?.label || 'Attendance'}
+        sub="Mark, track and manage attendance records and daily activity"
+      />
 
       {/* Top 5 Sub-Modules / Tab Cards (Exact match to screenshot) */}
       <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">

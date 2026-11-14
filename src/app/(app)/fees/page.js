@@ -252,7 +252,7 @@ function FeesContent() {
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={Wallet} title="Fees & accounts">
+      <PageHeader icon={Wallet} title="Fees & accounts" sub="Manage fee structures, student dues, collections and receipts.">
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}

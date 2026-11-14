@@ -196,7 +196,7 @@ export default function Courses() {
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={GraduationCap} title="Classes & sections">
+      <PageHeader icon={GraduationCap} title="Classes & sections" sub="Manage classes, sections, timetables and class teachers.">
         <button className="btn-primary" onClick={() => setCm({})}><Plus className="h-4 w-4" />Add class</button>
       </PageHeader>
 

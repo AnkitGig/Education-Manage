@@ -30,7 +30,7 @@ function Students() {
   return (
     <div className="grid gap-5 2xl:grid-cols-[1fr_380px]">
       <div className="min-w-0 space-y-5">
-        <PageHeader title="Students" sub="Manage all student records, admissions and profiles.">
+        <PageHeader icon={Users} title="Students" sub="Manage all student records, admissions and profiles.">
           <button onClick={exportCsv} className="btn-outline"><Download className="h-4 w-4" />Export</button>
           <Link href="/students/new" className="btn-primary"><Plus className="h-4 w-4" />Add Student</Link>
         </PageHeader>
