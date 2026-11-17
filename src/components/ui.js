@@ -58,19 +58,17 @@ const STAT = {
   orange: ['from-amber-400 to-orange-500', 'bg-orange-500/10'],
   yellow: ['from-amber-400 to-amber-500', 'bg-amber-500/10'],
 };
-export const Stat = ({ icon: Icon, label, value, sub, tone = 'purple', subTone }) => {
-  const t = STAT[tone] || STAT.purple;
+export const Stat = ({ icon: Icon, label, value, sub, tone = 'blue', subTone }) => {
   return (
-    <div className="card relative min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-pop">
-      <span className={cn('absolute -right-7 -top-7 h-24 w-24 rounded-full', t[1])} />
+    <div className="card relative min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0 pt-0.5 text-[13px] font-medium leading-snug text-ink-500">{label}</div>
-        <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md', t[0])}>
+        <div className="min-w-0 pt-0.5 text-[13px] font-bold leading-snug text-slate-900">{label}</div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00285b] text-white shadow-sm">
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <div className="relative mt-3 text-[22px] font-extrabold leading-none tracking-tight text-ink sm:text-2xl">{value}</div>
-      {sub && <div className={cn('relative mt-1.5 truncate text-xs font-medium', subTone || 'text-ink-500')}>{sub}</div>}
+      <div className="relative mt-3 text-[22px] font-black leading-none tracking-tight text-slate-950 sm:text-2xl">{value}</div>
+      {sub && <div className={cn('relative mt-1.5 truncate text-xs font-semibold', subTone || 'text-slate-800')}>{sub}</div>}
     </div>
   );
 };
@@ -126,7 +124,7 @@ export function Table({ cols, rows, loading, empty = 'Nothing here yet', onRowCl
         <thead>
           <tr>
             {cols.map((c, i) => (
-              <th key={c.h + i} className={cn('whitespace-nowrap border-y border-ink/[.06] bg-brand-50/50 px-3 py-3 text-left text-xs font-semibold text-ink-500 first:rounded-l-xl first:border-l last:rounded-r-xl last:border-r', c.cls)}>{c.h}</th>
+              <th key={c.h + i} className={cn('whitespace-nowrap border-y border-teal-900/10 bg-white/60 backdrop-blur-sm px-3 py-3 text-left text-xs font-semibold text-slate-700 first:rounded-l-xl first:border-l last:rounded-r-xl last:border-r', c.cls)}>{c.h}</th>
             ))}
           </tr>
         </thead>
@@ -135,8 +133,8 @@ export function Table({ cols, rows, loading, empty = 'Nothing here yet', onRowCl
             <tr><td colSpan={cols.length} className="py-12 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-brand-500" /></td></tr>
           ) : rows?.length ? rows.map((r, i) => (
             <tr key={r._id || i} onClick={onRowClick ? () => onRowClick(r) : undefined}
-              className={cn('group transition', onRowClick && 'cursor-pointer', activeId && activeId === r._id ? 'bg-brand-50' : 'hover:bg-brand-50/40')}>
-              {cols.map((c, j) => <td key={c.h + j} className={cn('whitespace-nowrap border-b border-ink/[.05] px-3 py-3 align-middle group-last:border-0', c.cls)}>{c.render(r, i)}</td>)}
+              className={cn('group transition', onRowClick && 'cursor-pointer', activeId && activeId === r._id ? 'bg-white/60' : 'hover:bg-white/35')}>
+              {cols.map((c, j) => <td key={c.h + j} className={cn('whitespace-nowrap border-b border-teal-900/[0.08] px-3 py-3 align-middle group-last:border-0', c.cls)}>{c.render(r, i)}</td>)}
             </tr>
           )) : (
             <tr><td colSpan={cols.length}><Empty title={empty} /></td></tr>

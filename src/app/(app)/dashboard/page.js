@@ -98,11 +98,11 @@ export default function Dashboard() {
           <div className="h-64">
             <ResponsiveContainer>
               <BarChart data={d.growth} margin={{ left: -20 }}>
-                <CartesianGrid vertical={false} stroke="#eef2f6" />
-                <XAxis dataKey="m" tickLine={false} axisLine={false} fontSize={12} stroke="#94a3b8" />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="#94a3b8" allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0' }} />
-                <Bar dataKey="count" name="Students" fill="#8257f5" radius={[6, 6, 0, 0]} barSize={28} />
+                <CartesianGrid vertical={false} stroke="rgba(255, 255, 255, 0.45)" />
+                <XAxis dataKey="m" tickLine={false} axisLine={false} fontSize={12} stroke="#3b666e" />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="#3b666e" allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #90dcd9', backgroundColor: '#ffffff', boxShadow: '0 4px 12px rgba(35,150,145,0.12)' }} />
+                <Bar dataKey="count" name="Students" fill="#6d3df0" radius={[6, 6, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -117,23 +117,23 @@ export default function Dashboard() {
                   dataKey="v" innerRadius={58} outerRadius={80} startAngle={90} endAngle={-270}
                   stroke="none" isAnimationActive={false}
                 >
-                  <Cell fill="#22c55e" />
-                  <Cell fill="#e5e7eb" />
+                  <Cell fill="#16a34a" />
+                  <Cell fill="rgba(255, 255, 255, 0.6)" />
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-bold text-ink">{pct}%</span>
-              <span className="text-xs text-ink-400">collected</span>
+              <span className="text-xs font-semibold text-slate-600">collected</span>
             </div>
           </div>
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-ink-500"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Collected</span>
+              <span className="flex items-center gap-2 text-slate-700 font-medium"><i className="h-2.5 w-2.5 rounded-full bg-emerald-600" />Collected</span>
               <b className="text-ink">{inr(d.feesCollected)}</b>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-ink-500"><i className="h-2.5 w-2.5 rounded-full bg-slate-300" />Pending</span>
+              <span className="flex items-center gap-2 text-slate-700 font-medium"><i className="h-2.5 w-2.5 rounded-full bg-white ring-1 ring-teal-900/15" />Pending</span>
               <b className="text-ink">{inr(d.feesPending)}</b>
             </div>
           </div>
