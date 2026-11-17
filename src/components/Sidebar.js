@@ -73,21 +73,21 @@ export default function Sidebar() {
       )}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#0b1d3a] text-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 select-none shadow-2xl lg:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col bg-[#003B5C] text-white transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 select-none shadow-2xl lg:shadow-none',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Brand Header matching screenshot */}
-        <div className="flex h-16 items-center justify-between px-5 border-b border-white/5">
+        <div className="flex h-16 items-center justify-between px-5 border-b border-white/10">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00c4a7] text-slate-950 shadow-md shadow-teal-500/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00B8E8] text-white shadow-md shadow-cyan-500/30">
               <BookOpen className="h-5 w-5" />
             </div>
             <div className="leading-tight">
               <div className="flex items-center gap-0.5 text-[15px] font-bold tracking-tight text-white">
-                EduManage<span className="text-[10px] text-teal-300 font-normal">®</span>
+                EduManage<span className="text-[10px] text-cyan-300 font-normal">®</span>
               </div>
-              <div className="max-w-[130px] truncate text-[10.5px] font-medium text-slate-400">
+              <div className="max-w-[130px] truncate text-[10.5px] font-medium text-cyan-100/70">
                 {inst?.name || 'Coaching Institute ERP'}
               </div>
             </div>
@@ -124,14 +124,14 @@ export default function Sidebar() {
                       className={cn(
                         'group flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150',
                         active
-                          ? 'bg-[#00c4a7] text-white font-bold shadow-md shadow-teal-500/20'
-                          : 'text-slate-300 hover:bg-white/[0.07] hover:text-white'
+                          ? 'bg-[#00B8E8] text-white font-bold shadow-md shadow-cyan-600/30'
+                          : 'text-slate-200 hover:bg-white/[0.08] hover:text-white'
                       )}
                     >
                       <Icon
                         className={cn(
                           'h-4 w-4 shrink-0 transition-colors',
-                          active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                          active ? 'text-white' : 'text-cyan-200/70 group-hover:text-white'
                         )}
                       />
                       <span className="truncate">{label}</span>

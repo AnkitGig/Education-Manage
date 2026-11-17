@@ -50,25 +50,73 @@ export const PageHeader = ({ icon: Icon, title, sub, children }) => (
   </div>
 );
 
-const STAT = {
-  purple: ['from-violet-500 to-indigo-600', 'bg-violet-500/10'],
-  blue: ['from-sky-500 to-blue-600', 'bg-sky-500/10'],
-  green: ['from-emerald-400 to-teal-600', 'bg-emerald-500/10'],
-  red: ['from-rose-400 to-red-500', 'bg-rose-500/10'],
-  orange: ['from-amber-400 to-orange-500', 'bg-orange-500/10'],
-  yellow: ['from-amber-400 to-amber-500', 'bg-amber-500/10'],
+const STAT_THEMES = {
+  blue: {
+    bg: 'bg-[#E8F4FF] border border-[#d2e8ff]',
+    iconBg: 'bg-[#d8ecff] text-[#0875E8]',
+    subTone: 'text-emerald-600',
+    wave: 'from-blue-200/40 via-sky-200/20 to-transparent',
+  },
+  green: {
+    bg: 'bg-[#E8FBF2] border border-[#cff5e2]',
+    iconBg: 'bg-[#d4f6e5] text-[#16a34a]',
+    subTone: 'text-slate-500',
+    wave: 'from-emerald-200/40 via-teal-200/20 to-transparent',
+  },
+  orange: {
+    bg: 'bg-[#FFF5E8] border border-[#ffebd0]',
+    iconBg: 'bg-[#ffebd0] text-[#ea580c]',
+    subTone: 'text-red-500',
+    wave: 'from-orange-200/40 via-amber-200/20 to-transparent',
+  },
+  purple: {
+    bg: 'bg-[#F2EEFF] border border-[#e4dcff]',
+    iconBg: 'bg-[#e4dcff] text-[#7c3aed]',
+    subTone: 'text-slate-500',
+    wave: 'from-purple-200/40 via-violet-200/20 to-transparent',
+  },
 };
-export const Stat = ({ icon: Icon, label, value, sub, tone = 'blue', subTone }) => {
+
+export const Stat = ({ icon: Icon, label, value, sub, tone = 'blue', subTone, className }) => {
+  const theme = STAT_THEMES[tone] || STAT_THEMES.blue;
   return (
-    <div className="card relative min-w-0 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+    <div
+      className={cn(
+        'relative min-w-0 overflow-hidden rounded-2xl p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+        theme.bg,
+        className
+      )}
+    >
+      {/* Decorative organic wave at bottom corner */}
+      <div
+        className={cn(
+          'pointer-events-none absolute -bottom-8 -right-8 h-28 w-36 rounded-full bg-gradient-to-tl opacity-70 blur-md',
+          theme.wave
+        )}
+      />
+
       <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0 pt-0.5 text-[13px] font-bold leading-snug text-slate-900">{label}</div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00285b] text-white shadow-sm">
+        <span
+          className={cn(
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm transition-transform',
+            theme.iconBg
+          )}
+        >
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <div className="relative mt-3 text-[22px] font-black leading-none tracking-tight text-slate-950 sm:text-2xl">{value}</div>
-      {sub && <div className={cn('relative mt-1.5 truncate text-xs font-semibold', subTone || 'text-slate-800')}>{sub}</div>}
+
+      <div className="relative mt-3">
+        <div className="text-[13px] font-semibold text-slate-700">{label}</div>
+        <div className="mt-1 text-[24px] font-black tracking-tight text-slate-900 sm:text-[26px]">
+          {value}
+        </div>
+        {sub && (
+          <div className={cn('mt-2 text-xs font-semibold', subTone || theme.subTone)}>
+            {sub}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
