@@ -40,10 +40,14 @@ export const Avatar = ({ src, name = '?', size = 36 }) =>
 export const PageHeader = ({ icon: Icon, title, sub, children }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
     <div className="flex items-center gap-4">
-      {Icon && <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-glow"><Icon className="h-6 w-6" /></span>}
+      {Icon && (
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#003B5C] text-white shadow-md shadow-slate-900/10">
+          <Icon className="h-6 w-6 text-[#00B8E8]" />
+        </span>
+      )}
       <div>
-        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-ink">{title}</h1>
-        {sub && <p className="mt-0.5 text-sm text-ink-500">{sub}</p>}
+        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight text-[#003B5C]">{title}</h1>
+        {sub && <p className="mt-0.5 text-sm text-slate-500">{sub}</p>}
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2.5">{children}</div>

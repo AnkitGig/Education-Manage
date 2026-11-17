@@ -151,22 +151,22 @@ function AttendanceContent() {
               onClick={() => handleTabChange(t.id)}
               className={`flex items-start gap-3 rounded-2xl p-4 text-left transition-all ${
                 active
-                  ? 'border-2 border-royal bg-white shadow-md shadow-blue-500/10'
-                  : 'border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                  ? 'border-2 border-[#00B8E8] bg-[#E8F4FF] shadow-sm'
+                  : 'border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-[#F3F8FF]'
               }`}
             >
               <div
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                  active ? 'bg-royal text-white' : 'bg-slate-100 text-slate-600'
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                  active ? 'bg-[#0875E8] text-white shadow-sm' : 'bg-slate-100 text-slate-500'
                 }`}
               >
                 <Icon className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <div className={`text-sm font-bold truncate ${active ? 'text-royal' : 'text-slate-900'}`}>
+                <div className={`text-sm font-bold truncate ${active ? 'text-[#003B5C]' : 'text-slate-900'}`}>
                   {t.label}
                 </div>
-                <div className="mt-0.5 text-xs text-slate-400 truncate">{t.sub}</div>
+                <div className={`mt-0.5 text-xs truncate ${active ? 'text-[#0875E8] font-medium' : 'text-slate-400'}`}>{t.sub}</div>
               </div>
             </button>
           );
@@ -177,31 +177,31 @@ function AttendanceContent() {
       {tab === 'students' && (
         <div className="space-y-5">
           {/* Controls Bar: Date, Class, Section, Attendance Mode + Action Buttons */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               {/* Date */}
               <div>
-                <label className="mb-1 block text-[11px] font-bold text-slate-500">Date</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#003B5C]">Date</label>
                 <div className="relative">
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-royal"
+                    className="h-10 rounded-xl border border-slate-200 bg-[#F3F8FF]/50 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:bg-white focus:border-[#0875E8] focus:ring-2 focus:ring-[#0875E8]/10"
                   />
                 </div>
               </div>
 
               {/* Class */}
               <div>
-                <label className="mb-1 block text-[11px] font-bold text-slate-500">Class</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#003B5C]">Class</label>
                 <select
                   value={selectedClass}
                   onChange={(e) => {
                     setSelectedClass(e.target.value);
                     setSection('A');
                   }}
-                  className="h-10 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none focus:border-royal"
+                  className="h-10 rounded-xl border border-slate-200 bg-[#F3F8FF]/50 px-3.5 text-sm font-semibold text-slate-800 outline-none transition focus:bg-white focus:border-[#0875E8] focus:ring-2 focus:ring-[#0875E8]/10"
                 >
                   {classList.map((c) => (
                     <option key={c._id || c.name} value={c.name}>
@@ -216,11 +216,11 @@ function AttendanceContent() {
 
               {/* Section */}
               <div>
-                <label className="mb-1 block text-[11px] font-bold text-slate-500">Section</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#003B5C]">Section</label>
                 <select
                   value={section}
                   onChange={(e) => setSection(e.target.value)}
-                  className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none focus:border-royal"
+                  className="h-10 rounded-xl border border-slate-200 bg-[#F3F8FF]/50 px-4 text-sm font-semibold text-slate-800 outline-none transition focus:bg-white focus:border-[#0875E8] focus:ring-2 focus:ring-[#0875E8]/10"
                 >
                   {sectionOptions.map((s) => (
                     <option key={s._id || s.name} value={s.shortName || s.name}>
@@ -235,11 +235,11 @@ function AttendanceContent() {
 
               {/* Attendance Mode */}
               <div>
-                <label className="mb-1 block text-[11px] font-bold text-slate-500">Attendance Mode</label>
+                <label className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-[#003B5C]">Attendance Mode</label>
                 <select
                   value={mode}
                   onChange={(e) => setMode(e.target.value)}
-                  className="h-10 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-800 outline-none focus:border-royal"
+                  className="h-10 rounded-xl border border-slate-200 bg-[#F3F8FF]/50 px-3.5 text-sm font-semibold text-slate-800 outline-none transition focus:bg-white focus:border-[#0875E8] focus:ring-2 focus:ring-[#0875E8]/10"
                 >
                   <option value="Manual">Manual</option>
                   <option value="Biometric">Biometric</option>
@@ -253,16 +253,16 @@ function AttendanceContent() {
               <button
                 type="button"
                 onClick={() => handleBulkAction('present')}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 transition hover:border-[#00B8E8]/40 hover:bg-[#E8F4FF] hover:text-[#0875E8]"
               >
-                <Layers className="h-4 w-4 text-royal" />
+                <Layers className="h-4 w-4 text-[#0875E8]" />
                 Bulk Action
               </button>
 
               <button
                 type="button"
                 onClick={exportAttendanceCSV}
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300"
               >
                 <Download className="h-4 w-4 text-slate-500" />
                 Export
@@ -272,7 +272,7 @@ function AttendanceContent() {
                 type="button"
                 disabled={busy}
                 onClick={handleSaveAttendance}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-royal px-5 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition hover:bg-royal-700 disabled:opacity-50"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0875E8] px-5 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition hover:bg-[#0766cc] disabled:opacity-50"
               >
                 <Check className="h-4 w-4 stroke-[3]" />
                 {busy ? 'Saving…' : 'Save Attendance'}
@@ -296,7 +296,7 @@ function AttendanceContent() {
                             setSelectedAll(e.target.checked);
                             setSelectedRows(e.target.checked ? students.map((s) => s._id) : []);
                           }}
-                          className="h-4 w-4 rounded border-slate-300 text-royal focus:ring-royal/20"
+                          className="h-4 w-4 rounded border-slate-300 text-[#0875E8] focus:ring-[#0875E8]/20"
                         />
                       </th>
                       <th className="px-4 py-3.5">Roll No.</th>
@@ -352,11 +352,11 @@ function AttendanceContent() {
                                   prev.includes(s._id) ? prev.filter((i) => i !== s._id) : [...prev, s._id]
                                 )
                               }
-                              className="h-4 w-4 rounded border-slate-300 text-royal focus:ring-royal/20"
+                              className="h-4 w-4 rounded border-slate-300 text-[#0875E8] focus:ring-[#0875E8]/20"
                             />
                           </td>
                           <td className="px-4 py-3.5 font-bold text-slate-800">{s.roll}</td>
-                          <td className="px-4 py-3.5 font-bold text-navy">
+                          <td className="px-4 py-3.5 font-bold text-[#003B5C]">
                             <div className="flex items-center gap-3">
                               <Avatar name={s.name} size={32} src={s.photo?.url} />
                               <span>{s.name}</span>
@@ -427,8 +427,10 @@ function AttendanceContent() {
               {/* Card 1: Attendance Summary with Donut */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-extrabold text-navy">Attendance Summary</h3>
-                  <span className="text-xs font-semibold text-slate-500">{selectedClass} - Section {section}</span>
+                  <h3 className="text-base font-extrabold text-[#003B5C]">Attendance Summary</h3>
+                  <span className="rounded-lg bg-[#E8F4FF] px-2.5 py-1 text-xs font-bold text-[#0875E8]">
+                    {selectedClass} - Section {section}
+                  </span>
                 </div>
 
                 <div className="mt-5 flex items-center justify-between gap-3">
@@ -437,7 +439,7 @@ function AttendanceContent() {
                     className="relative flex h-32 w-32 shrink-0 items-center justify-center rounded-full"
                     style={{
                       background: `conic-gradient(
-                        #10b981 0% ${(stats.present / (stats.total || 1)) * 100}%,
+                        #00B8E8 0% ${(stats.present / (stats.total || 1)) * 100}%,
                         #ef4444 ${(stats.present / (stats.total || 1)) * 100}% ${((stats.present + stats.absent) / (stats.total || 1)) * 100}%,
                         #f59e0b ${((stats.present + stats.absent) / (stats.total || 1)) * 100}% ${((stats.present + stats.absent + stats.late) / (stats.total || 1)) * 100}%,
                         #8b5cf6 ${((stats.present + stats.absent + stats.late) / (stats.total || 1)) * 100}% 100%
@@ -445,32 +447,32 @@ function AttendanceContent() {
                     }}
                   >
                     <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white shadow-inner">
-                      <span className="text-2xl font-black text-navy">{stats.total}</span>
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Students</span>
+                      <span className="text-2xl font-black text-[#003B5C]">{stats.total}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Students</span>
                     </div>
                   </div>
 
                   {/* Summary Counts with indicators */}
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                      <span className="text-slate-600">Present</span>
-                      <b className="ml-auto text-slate-900">{stats.present} ({Math.round((stats.present / (stats.total || 1)) * 100)}%)</b>
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#00B8E8]" />
+                      <span className="text-slate-600 font-medium">Present</span>
+                      <b className="ml-auto text-[#003B5C]">{stats.present} ({Math.round((stats.present / (stats.total || 1)) * 100)}%)</b>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
-                      <span className="text-slate-600">Absent</span>
-                      <b className="ml-auto text-slate-900">{stats.absent} ({Math.round((stats.absent / (stats.total || 1)) * 100)}%)</b>
+                      <span className="text-slate-600 font-medium">Absent</span>
+                      <b className="ml-auto text-[#003B5C]">{stats.absent} ({Math.round((stats.absent / (stats.total || 1)) * 100)}%)</b>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                      <span className="text-slate-600">Late</span>
-                      <b className="ml-auto text-slate-900">{stats.late} ({Math.round((stats.late / (stats.total || 1)) * 100)}%)</b>
+                      <span className="text-slate-600 font-medium">Late</span>
+                      <b className="ml-auto text-[#003B5C]">{stats.late} ({Math.round((stats.late / (stats.total || 1)) * 100)}%)</b>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full bg-purple-500" />
-                      <span className="text-slate-600">Half Day</span>
-                      <b className="ml-auto text-slate-900">{stats.halfDay} ({Math.round((stats.halfDay / (stats.total || 1)) * 100)}%)</b>
+                      <span className="text-slate-600 font-medium">Half Day</span>
+                      <b className="ml-auto text-[#003B5C]">{stats.halfDay} ({Math.round((stats.halfDay / (stats.total || 1)) * 100)}%)</b>
                     </div>
                   </div>
                 </div>
@@ -478,38 +480,38 @@ function AttendanceContent() {
 
               {/* Card 2: Today's Insights */}
               <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm space-y-3.5">
-                <div className="flex items-center gap-2 text-navy font-bold text-sm">
-                  <FileText className="h-4 w-4 text-royal" />
+                <div className="flex items-center gap-2 text-[#003B5C] font-bold text-sm">
+                  <FileText className="h-4 w-4 text-[#0875E8]" />
                   Today’s Insights
                 </div>
 
                 <div className="space-y-2.5 text-xs">
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                    <span className="flex items-center gap-2 text-slate-600">
-                      <Users className="h-4 w-4 text-royal" />
+                  <div className="flex items-center justify-between rounded-xl bg-[#F3F8FF] p-2.5 border border-blue-100/60">
+                    <span className="flex items-center gap-2 text-slate-600 font-medium">
+                      <Users className="h-4 w-4 text-[#0875E8]" />
                       Attendance Rate
                     </span>
-                    <span className="rounded-md bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">
+                    <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-bold text-emerald-800">
                       {stats.rate}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                    <span className="flex items-center gap-2 text-slate-600">
-                      <Clock className="h-4 w-4 text-amber-500" />
+                  <div className="flex items-center justify-between rounded-xl bg-[#FFF5E8]/80 p-2.5 border border-orange-100/60">
+                    <span className="flex items-center gap-2 text-slate-600 font-medium">
+                      <Clock className="h-4 w-4 text-amber-600" />
                       Late Arrivals
                     </span>
-                    <span className="rounded-md bg-amber-50 px-2 py-0.5 font-bold text-amber-700">
+                    <span className="rounded-md bg-amber-100 px-2 py-0.5 font-bold text-amber-800">
                       {stats.late}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                    <span className="flex items-center gap-2 text-slate-600">
-                      <Calendar className="h-4 w-4 text-rose-500" />
+                  <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                    <span className="flex items-center gap-2 text-slate-600 font-medium">
+                      <Calendar className="h-4 w-4 text-slate-500" />
                       Leave Applied
                     </span>
-                    <span className="rounded-md bg-rose-50 px-2 py-0.5 font-bold text-rose-700">
+                    <span className="rounded-md bg-slate-200 px-2 py-0.5 font-bold text-slate-700">
                       2
                     </span>
                   </div>
@@ -605,12 +607,12 @@ function AttendanceContent() {
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
             <div>
-              <h3 className="text-base font-bold text-navy">Monthly Attendance Analytics &amp; Reports</h3>
+              <h3 className="text-base font-bold text-[#003B5C]">Monthly Attendance Analytics &amp; Reports</h3>
               <p className="text-xs text-slate-500">Export student and staff monthly attendance matrices</p>
             </div>
             <button
               onClick={exportAttendanceCSV}
-              className="inline-flex items-center gap-2 rounded-xl bg-royal px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-royal-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0875E8] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#0766cc]"
             >
               <Download className="h-4 w-4" />
               Download Monthly Report
@@ -625,7 +627,7 @@ function AttendanceContent() {
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
               <div className="text-xs font-bold text-slate-400 uppercase">Total Working Days</div>
-              <div className="mt-2 text-3xl font-extrabold text-navy">24 Days</div>
+              <div className="mt-2 text-3xl font-extrabold text-[#003B5C]">24 Days</div>
               <div className="mt-1 text-xs text-slate-500">Current Academic Month</div>
             </div>
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
