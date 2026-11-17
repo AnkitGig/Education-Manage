@@ -61,7 +61,7 @@ main .grid>* {
   }
 
   .btn-primary {
-    @apply btn bg-blue-600 text-white shadow hover:bg-blue-700;
+    @apply btn bg-[#00bda1] text-white font-bold shadow hover:bg-[#00ab92];
   }
 
   .btn-outline {
