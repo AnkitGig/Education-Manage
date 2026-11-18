@@ -1,7 +1,7 @@
 import './globals.css';
 import { Toaster } from '@/components/ui';
 
-export const metadata = { title: 'EduManage – Coaching Institute Management', description: 'Students, fees, attendance, teachers and WhatsApp in one place' };
+export const metadata = { title: 'EduManage – Coaching Institute Management', description: 'Students, fees, attendance and staff in one place' };
 
 export default function RootLayout({ children }) {
   return (

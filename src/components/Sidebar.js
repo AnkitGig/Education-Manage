@@ -11,8 +11,6 @@ import {
   Wallet,
   Banknote,
   BarChart3,
-  MessageCircle,
-  Bell,
   Settings,
   ChevronDown,
   X,
@@ -38,13 +36,6 @@ const GROUPS = [
       ['/fees', 'Fees & Payments', Wallet],
       ['/salary', 'Salary & Expenses', Banknote],
       ['/reports', 'Reports', BarChart3],
-    ],
-  ],
-  [
-    'Communication',
-    [
-      ['/whatsapp', 'WhatsApp Messages', MessageCircle],
-      ['/notices', 'Notices & Announcements', Bell],
     ],
   ],
   ['System', [['/settings', 'Settings', Settings]]],

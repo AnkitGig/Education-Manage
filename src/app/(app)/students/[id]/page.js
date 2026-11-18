@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Trash2, Phone, Mail, MessageCircle, FileText, ExternalLink, Upload, Printer, Receipt, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Phone, Mail, FileText, ExternalLink, Upload, Printer, Receipt, CheckCircle2, Loader2 } from 'lucide-react';
 import { useApi, api, run, fmtDate } from '@/lib/client';
 import { StatusBadge, Badge, Avatar, Card, Spinner, Modal, Field, Tabs, Table, inr } from '@/components/ui';
 
@@ -94,12 +94,6 @@ export default function StudentDetailPage() {
     }
   };
 
-  const remind = () =>
-    run(
-      () => api('/api/whatsapp/send', 'POST', { scope: 'student', student: id, template: 'fee_due' }),
-      'Reminder sent on WhatsApp'
-    );
-
   const tabs = [
     ['profile', 'Profile'],
     ['fees', `Fees${fees.records?.length ? ` (${fees.records.length})` : ''}`],
@@ -140,10 +134,7 @@ export default function StudentDetailPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {fees.due > 0 && (
-              <>
-                <button onClick={remind} className="btn-outline"><MessageCircle className="h-4 w-4" />Remind</button>
-                <button onClick={openPay} className="btn-primary">Collect fee</button>
-              </>
+              <button onClick={openPay} className="btn-primary">Collect fee</button>
             )}
             <Link href={`/students/${id}/edit`} className="btn-outline"><Pencil className="h-4 w-4" />Edit</Link>
             <button onClick={remove} title="Delete student" className="btn-outline text-rose-600 hover:bg-rose-50">
@@ -187,7 +178,7 @@ export default function StudentDetailPage() {
               <Rows rows={[
                 ['Name', s.parentName],
                 ['Relation', s.parentRelation || 'Guardian'],
-                ['WhatsApp', s.parentMobile],
+                ['Mobile', s.parentMobile],
               ]} />
             </Card>
           </div>

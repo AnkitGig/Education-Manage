@@ -626,7 +626,7 @@ function StaffManagementContent() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Phone / WhatsApp" required>
+              <Field label="Phone Number" required>
                 <input
                   required
                   value={form.phone}

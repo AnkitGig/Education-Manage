@@ -2,7 +2,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Users, GraduationCap, PauseCircle, UserX, Search, Plus, Download, Eye, Pencil, Trash2, Phone, MessageCircle, Mail, X } from 'lucide-react';
+import { Users, GraduationCap, PauseCircle, UserX, Search, Plus, Download, Eye, Pencil, Trash2, Phone, Mail, X } from 'lucide-react';
 import { useApi, api, run, qs, fmtDate, downloadCSV } from '@/lib/client';
 import { Stat, Table, Pager, Tabs, StatusBadge, Badge, Avatar, PageHeader, Card, inr } from '@/components/ui';
 
@@ -103,9 +103,6 @@ function Students() {
           <div className="flex gap-2">
             <Link href={`/students/${sel._id}`} className="btn-primary flex-1"><Eye className="h-4 w-4" />View Full Profile</Link>
             <Link href={`/students/${sel._id}/edit`} className="btn-outline flex-1"><Pencil className="h-4 w-4" />Edit</Link>
-          </div>
-          <div>
-            <button className="btn-green w-full" onClick={() => run(() => api('/api/whatsapp/send', 'POST', { scope: 'student', student: sel._id, template: 'fee_due' }), 'WhatsApp sent')}><MessageCircle className="h-4 w-4" />Send WhatsApp</button>
           </div>
         </aside></>
       )}

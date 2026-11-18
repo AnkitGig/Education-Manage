@@ -1,8 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {
-  Database, Users, IndianRupee, Clock, CalendarCheck, UserPlus, MessageCircle,
-  CheckCheck, Hourglass, XCircle,
+  Database, Users, IndianRupee, Clock, CalendarCheck, UserPlus,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell,
@@ -36,18 +35,6 @@ export default function Dashboard() {
     const r = await run(() => api('/api/setup/demo', 'POST'), 'Sample data loaded');
     if (r) mutate();
   };
-  const remind = (r) =>
-    run(
-      () => api('/api/whatsapp/send', 'POST', { scope: 'student', student: r.student._id, template: 'fee_due' }),
-      'Reminder sent on WhatsApp'
-    );
-
-  const wa = [
-    [MessageCircle, 'text-emerald-600 bg-emerald-50', d.whatsapp.sent, 'Sent'],
-    [CheckCheck, 'text-blue-600 bg-blue-50', d.whatsapp.delivered, 'Delivered'],
-    [Hourglass, 'text-amber-600 bg-amber-50', d.whatsapp.pending, 'Pending'],
-    [XCircle, 'text-red-600 bg-red-50', d.whatsapp.failed, 'Failed'],
-  ];
 
   return (
     <div className="space-y-6">
@@ -142,7 +129,7 @@ export default function Dashboard() {
 
       {/* Lists */}
       <div className="grid gap-5 xl:grid-cols-3">
-        <Card title="Fee reminders" action={viewAll('/fees?tab=collections')} className="xl:col-span-2">
+        <Card title="Fee dues" action={viewAll('/fees?tab=collections')} className="xl:col-span-2">
           <Table
             empty="No pending dues"
             rows={d.dueReminders}
@@ -153,9 +140,9 @@ export default function Dashboard() {
               {
                 h: '',
                 render: (r) => (
-                  <button onClick={() => remind(r)} className="rounded-lg border border-brand-300 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50">
-                    Remind
-                  </button>
+                  <Link href="/fees" className="rounded-lg border border-brand-300 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50">
+                    Collect
+                  </Link>
                 ),
               },
             ]}
@@ -204,21 +191,6 @@ export default function Dashboard() {
           </div>
         </Card>
       </div>
-
-      {/* WhatsApp */}
-      <Card title="WhatsApp this month" action={<Link href="/whatsapp" className="btn-outline py-1.5">Send message</Link>}>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {wa.map(([Icon, color, value, label]) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className={cn('flex h-10 w-10 items-center justify-center rounded-full', color)}><Icon className="h-5 w-5" /></span>
-              <div>
-                <div className="text-xl font-bold leading-none text-ink">{value}</div>
-                <div className="mt-1 text-xs text-ink-400">{label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }

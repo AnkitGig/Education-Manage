@@ -5,7 +5,7 @@ import { ChevronDown, Menu, X } from 'lucide-react';
 import Logo from './Logo';
 
 const MENUS = [
-  ['Product', [['Student management', '#features'], ['Fees & receipts', '#features'], ['Attendance & alerts', '#features'], ['WhatsApp notifications', '#features']]],
+  ['Product', [['Student management', '#features'], ['Fees & receipts', '#features'], ['Attendance & alerts', '#features'], ['Staff management', '#features']]],
   ['Solutions', [['School coaching', '#types'], ['Competitive exam', '#types'], ['Skill & hobby classes', '#types'], ['Tuition & private classes', '#types']]],
   ['Resources', [['How it works', '#how'], ['Why EduManage', '#why'], ['FAQ', '#faq']]],
 ];

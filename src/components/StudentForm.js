@@ -197,7 +197,7 @@ export default function StudentForm({ initial }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Name" required><input className="inp" value={f.parentName} onChange={set('parentName')} /></Field>
               <Field label="Relation"><Select options={['Father', 'Mother', 'Guardian']} value={f.parentRelation} onChange={set('parentRelation')} /></Field>
-              <Field label="WhatsApp mobile" required className="sm:col-span-2">
+              <Field label="Parent mobile" required className="sm:col-span-2">
                 <input className="inp" inputMode="tel" value={f.parentMobile} onChange={set('parentMobile')} placeholder="10-digit number" />
               </Field>
             </div>

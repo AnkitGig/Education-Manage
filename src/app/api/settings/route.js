@@ -9,7 +9,6 @@ export const GET = wrap(async () => {
   return NextResponse.json({
     ...i,
     integrations: {
-      whatsapp: !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID),
       cloudinary: !!process.env.CLOUDINARY_API_SECRET,
     },
   });

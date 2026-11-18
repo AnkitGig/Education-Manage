@@ -1,11 +1,7 @@
 import { NextResponse } from 'next/server';
 import { wrap, bad } from '@/lib/crud';
-import { sendBulk, fill } from '@/lib/whatsapp';
-import { DEFAULT_TEMPLATES } from '@/lib/templates';
 import Attendance from '@/models/Attendance';
 import Student from '@/models/Student';
-import Institute from '@/models/Institute';
-import Template from '@/models/Template';
 
 // ?batch=&date=YYYY-MM-DD  -> students of the batch with saved (or default "present") status
 export const GET = wrap(async (req) => {
@@ -24,24 +20,8 @@ export const GET = wrap(async (req) => {
 export const POST = wrap(async (req) => {
   const { batch, date, records } = await req.json();
   if (!batch || !date || !Array.isArray(records)) return bad('Invalid data');
-  const prev = await Attendance.findOne({ batch, date }).lean();
-  const wasAbsent = new Set((prev?.records || []).filter((r) => r.status === 'absent').map((r) => String(r.student)));
   await Attendance.findOneAndUpdate({ batch, date }, { batch, date, records }, { upsert: true, new: true });
-
-  // WhatsApp alert for newly absent students
-  const inst = await Institute.findOne().lean();
-  const newAbsent = records.filter((r) => r.status === 'absent' && !wasAbsent.has(String(r.student))).map((r) => r.student);
-  let alerted = 0;
-  if (newAbsent.length && inst?.automation?.attendanceAlert !== false) {
-    const t = (await Template.findOne({ key: 'attendance' }).lean()) || DEFAULT_TEMPLATES.find((x) => x.key === 'attendance');
-    const list = await Student.find({ _id: { $in: newAbsent } }).populate('course', 'name').populate('batch', 'name').lean();
-    const res = await sendBulk({
-      title: 'Attendance alert – auto', template: 'attendance',
-      items: list.map((s) => ({ to: s.parentMobile, text: fill(t.body, { parent: s.parentName, student: s.name, course: s.course?.name, batch: s.batch?.name, date, institute: inst?.name || '' }) })),
-    });
-    alerted = res.sent;
-  }
-  return NextResponse.json({ ok: true, alerted });
+  return NextResponse.json({ ok: true });
 });
 
 export const dynamic = 'force-dynamic';

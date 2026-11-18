@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { wrap, bad } from '@/lib/crud';
 import { nextId } from '@/lib/utils';
-import { sendText, fill } from '@/lib/whatsapp';
 import FeeRecord from '@/models/FeeRecord';
-import Student from '@/models/Student';
-import Institute from '@/models/Institute';
-import Template from '@/models/Template';
-import { DEFAULT_TEMPLATES } from '@/lib/templates';
 
 // { student, amount, mode }  – pays oldest dues first
 export const POST = wrap(async (req) => {
@@ -19,7 +14,6 @@ export const POST = wrap(async (req) => {
   if (left > outstanding) return bad(`Amount is more than the outstanding ₹${outstanding}`);
 
   const receiptNo = await nextId('receipt', 'RCP', 5);
-  const total = left;
   for (const r of recs) {
     if (left <= 0) break;
     const due = r.amount - r.paid;
@@ -31,13 +25,6 @@ export const POST = wrap(async (req) => {
     left -= pay;
   }
 
-  // payment confirmation over WhatsApp (if automation is on)
-  const inst = await Institute.findOne().lean();
-  if (inst?.automation?.paymentConfirmation !== false) {
-    const s = await Student.findById(student).lean();
-    const t = (await Template.findOne({ key: 'payment' }).lean()) || DEFAULT_TEMPLATES.find((x) => x.key === 'payment');
-    sendText(s.parentMobile, fill(t.body, { parent: s.parentName, student: s.name, amount: total, receipt: receiptNo, institute: inst?.name || '' })).catch(() => {});
-  }
   return NextResponse.json({ ok: true, receiptNo });
 });
 

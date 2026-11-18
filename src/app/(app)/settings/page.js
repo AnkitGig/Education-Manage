@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Settings as SettingsIcon, Building2, Users, Crown, Link2, Database, SlidersHorizontal, Camera, Check, Plus, Pencil, Trash2, MessageCircle, CreditCard, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Building2, Users, Crown, Link2, Database, SlidersHorizontal, Camera, Check, Plus, Pencil, Trash2, CreditCard, Save } from 'lucide-react';
 import { useApi, api, run, upload, fmtDate } from '@/lib/client';
 import { Card, Field, Table, Badge, StatusBadge, Avatar, PageHeader, Toggle, Modal, inr } from '@/components/ui';
 
@@ -20,7 +20,7 @@ export default function Settings() {
     if (r) { setUm(null); mu(); }
   };
   const delUser = async (u) => { if (confirm(`Remove ${u.name}?`)) { await run(() => api(`/api/users/${u._id}`, 'DELETE'), 'User removed'); mu(); } };
-  const clearAll = async () => { if (confirm('Delete ALL students, staff, fees, attendance, classes, notices and financial records? Users and settings are kept. This cannot be undone.')) await run(() => api('/api/setup/demo', 'DELETE'), 'All data cleared'); };
+  const clearAll = async () => { if (confirm('Delete ALL students, staff, fees, attendance, classes and financial records? Users and settings are kept. This cannot be undone.')) await run(() => api('/api/setup/demo', 'DELETE'), 'All data cleared'); };
   const plan = f.plan || {};
 
   return (
@@ -72,10 +72,10 @@ export default function Settings() {
         <div className="space-y-5">
           <Card title="Subscription Plan" icon={Crown} action={<Badge tone="purple">{plan.name} Plan</Badge>}>
             <div className="flex items-end justify-between"><div className="text-3xl font-extrabold">{inr(plan.price)}<span className="text-base font-medium text-slate-500"> / month</span></div><span className="text-xs text-slate-500">Valid till: {fmtDate(plan.validTill)}</span></div>
-            <ul className="mt-3 grid grid-cols-2 gap-1.5 text-sm">{[`Up to ${plan.maxStudents} Students`, 'Reports & Analytics', 'Fees & Payments', 'Multi-user Access', 'WhatsApp Notifications', 'Online Support'].map((x) => <li key={x} className="flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-500" />{x}</li>)}</ul>
+            <ul className="mt-3 grid grid-cols-2 gap-1.5 text-sm">{[`Up to ${plan.maxStudents} Students`, 'Reports & Analytics', 'Fees & Payments', 'Multi-user Access', 'Data Export', 'Online Support'].map((x) => <li key={x} className="flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-500" />{x}</li>)}</ul>
           </Card>
           <Card title="Integrations" icon={Link2}>
-            <div className="space-y-3">{[[MessageCircle, 'WhatsApp (Business API)', 'Send fee reminders, attendance alerts & notices', f.integrations?.whatsapp], [CreditCard, 'Cloudinary', 'Photos, logos and documents storage', f.integrations?.cloudinary]].map(([I, t, d, on]) => <div key={t} className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><I className="h-5 w-5" /></span><div className="flex-1"><div className="text-sm font-bold">{t}</div><div className="text-xs text-slate-500">{d}</div></div><Badge tone={on ? 'green' : 'gray'}>{on ? 'Connected' : 'Not connected'}</Badge></div>)}</div>
+            <div className="space-y-3">{[[CreditCard, 'Cloudinary', 'Photos, logos and documents storage', f.integrations?.cloudinary]].map(([I, t, d, on]) => <div key={t} className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><I className="h-5 w-5" /></span><div className="flex-1"><div className="text-sm font-bold">{t}</div><div className="text-xs text-slate-500">{d}</div></div><Badge tone={on ? 'green' : 'gray'}>{on ? 'Connected' : 'Not connected'}</Badge></div>)}</div>
             <p className="mt-3 text-xs text-slate-400">Credentials are read from your server’s <code>.env</code> file.</p>
           </Card>
           <Card title="Data Management" icon={Database}>

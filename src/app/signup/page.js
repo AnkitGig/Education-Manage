@@ -68,7 +68,7 @@ export default function Signup() {
       <div className="mt-6 space-y-3.5">
         <div className="grid gap-3.5 sm:grid-cols-2">
           <Input compact icon={User} required value={f.name} onChange={set('name')} placeholder="Your full name" />
-          <Input compact icon={Phone} optional type="tel" value={f.phone} onChange={set('phone')} placeholder="Phone / WhatsApp" />
+          <Input compact icon={Phone} optional type="tel" value={f.phone} onChange={set('phone')} placeholder="Phone Number" />
         </div>
 
         <Input compact icon={Building2} required value={f.instituteName} onChange={set('instituteName')} placeholder="Institute / Coaching name" />

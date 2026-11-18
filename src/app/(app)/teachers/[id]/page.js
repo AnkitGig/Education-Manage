@@ -17,7 +17,6 @@ import {
   Clock,
   Layers,
   Upload,
-  MessageCircle,
   ExternalLink
 } from 'lucide-react';
 import { useApi, api, run, fmtDate, thisMonth, upload } from '@/lib/client';
@@ -186,17 +185,6 @@ export default function TeacherDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {teacher.phone && (
-            <a
-              href={`https://wa.me/${teacher.phone.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-green"
-            >
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          )}
           <button onClick={handleMarkSalary} className="btn-primary">
             <IndianRupee className="h-4 w-4" />
             Mark Current Salary

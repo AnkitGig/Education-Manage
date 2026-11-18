@@ -3,7 +3,7 @@ import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Wallet, AlertTriangle, CheckCircle2, Download, Plus, Search,
-  MessageCircle, Printer, Pencil, Copy, Trash2, X, ChevronRight, Loader2,
+  Printer, Pencil, Copy, Trash2, X, ChevronRight, Loader2,
 } from 'lucide-react';
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -172,12 +172,6 @@ function FeesContent() {
       }
     }
   };
-
-  const remind = (id) =>
-    run(
-      () => api('/api/whatsapp/send', 'POST', { scope: 'student', student: id, template: 'fee_due' }),
-      'Reminder sent on WhatsApp'
-    );
 
   const exportReceipts = () =>
     downloadCSV(`receipts_${year}.csv`, [
@@ -526,15 +520,6 @@ function FeesContent() {
                   h: '',
                   render: (r) => (
                     <div className="flex items-center justify-end gap-1.5">
-                      {r.due > 0 && (
-                        <button
-                          title="Send WhatsApp reminder"
-                          onClick={() => remind(r.student?._id)}
-                          className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </button>
-                      )}
                       <button
                         onClick={() => openCollect(r.student?._id, r.nextPendingInstallment?.due || r.due)}
                         disabled={!r.due}

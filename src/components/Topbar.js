@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, Search, Bell, ChevronDown, LogOut, Landmark } from 'lucide-react';
+import { Menu, Search, ChevronDown, LogOut, Landmark } from 'lucide-react';
 import { useApi, api } from '@/lib/client';
 
 export default function Topbar() {
@@ -61,16 +61,6 @@ export default function Topbar() {
           <span className="font-semibold text-slate-800">{instituteName}</span>
           <ChevronDown className="h-3.5 w-3.5 text-slate-400 ml-0.5" />
         </div>
-
-        {/* Notification Bell */}
-        <Link
-          href="/notices"
-          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-slate-200/80 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-        </Link>
 
         {/* User profile avatar & details */}
         <div className="relative">

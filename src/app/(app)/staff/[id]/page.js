@@ -547,7 +547,7 @@ export default function StaffDetailPage() {
               <Field label="Full Name" required>
                 <input name="name" defaultValue={staff.name} required className="inp" />
               </Field>
-              <Field label="Phone / WhatsApp" required>
+              <Field label="Phone Number" required>
                 <input name="phone" defaultValue={staff.phone} required className="inp" />
               </Field>
             </div>

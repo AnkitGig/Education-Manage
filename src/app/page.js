@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Check, Users, CreditCard, CalendarCheck, MessageCircle, Layers, UsersRound, BarChart3, Megaphone, UserCog, ShieldCheck, GraduationCap, Star, Zap, PlayCircle, Plus, Mail } from 'lucide-react';
+import { ArrowRight, Check, Users, CreditCard, CalendarCheck, Layers, UsersRound, BarChart3, UserCog, ShieldCheck, GraduationCap, Star, Zap, PlayCircle, Plus, Mail } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import LandingNav from '@/components/landing/Nav';
 import Logo from '@/components/landing/Logo';
@@ -8,7 +8,7 @@ import Testimonials from '@/components/landing/Testimonials';
 export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'EduManage – Coaching institute management software',
-  description: 'Admissions, fees, attendance, teachers and parent updates on WhatsApp, all in one simple dashboard. Built for coaching institutes in India.',
+  description: 'Admissions, fees, attendance, staff and batches, all in one simple dashboard. Built for coaching institutes in India.',
 };
 
 /* ------------------------------------------------------------------
@@ -25,23 +25,23 @@ const TRUSTED = [ // SAMPLE client names – replace with your real clients' log
 ];
 const STATS = [ // SAMPLE figures
   [Users, '1,000+', 'Institutes Trust Us'], [GraduationCap, '5,00,000+', 'Students Managed'],
-  [MessageCircle, '1 Cr+', 'WhatsApp Messages Sent'], [Star, '99.9%', 'Uptime & Reliability'],
+  [Check, '10 Lakh+', 'Fee Receipts Issued'], [Star, '99.9%', 'Uptime & Reliability'],
 ];
 const TESTIMONIALS = [ // SAMPLE testimonials
-  { quote: 'EduManage has made our day-to-day work so much easier. Fee collection is smooth, attendance takes seconds and parents are always informed on WhatsApp.', name: 'Rakesh Sharma', role: 'Director, Sharma Coaching Classes, Jaipur', photo: '/landing/avatar.webp' },
+  { quote: 'EduManage has made our day-to-day work so much easier. Fee collection is smooth, attendance takes seconds and operations are always organized.', name: 'Rakesh Sharma', role: 'Director, Sharma Coaching Classes, Jaipur', photo: '/landing/avatar.webp' },
   { quote: 'Fee reminders go out by themselves now, so we spend far less time chasing payments at the front desk.', name: 'Sample Name', role: 'Founder, Sample Academy' },
   { quote: 'The monthly profit view finally shows us where the money goes. Our team loves how simple everything is.', name: 'Sample Name', role: 'Director, Sample Classes' },
 ];
 
 const FEATURES = [
-  [Users, 'Student', 'Management'], [CreditCard, 'Fees &', 'Receipts'], [CalendarCheck, 'Smart', 'Attendance'], [MessageCircle, 'WhatsApp', 'Notifications'], [Layers, 'Courses &', 'Batches'],
-  [UsersRound, 'Teachers', '& Payroll'], [BarChart3, 'Reports', '& Profit'], [Megaphone, 'Notices', '& Events'], [UserCog, 'Multi-user', 'Access'], [ShieldCheck, 'Secure', '& Reliable'],
+  [Users, 'Student', 'Management'], [CreditCard, 'Fees &', 'Receipts'], [CalendarCheck, 'Smart', 'Attendance'], [Layers, 'Courses &', 'Batches'],
+  [UsersRound, 'Teachers', '& Payroll'], [BarChart3, 'Reports', '& Profit'], [UserCog, 'Multi-user', 'Access'], [ShieldCheck, 'Secure', '& Reliable'],
 ];
 const STEPS = [
   ['Create your institute', 'Sign up and set your institute profile.'],
   ['Add courses & batches', 'Define courses, fee plans, timings and teachers.'],
   ['Admit students', 'A guided form to capture details, photo, documents and the fee plan.'],
-  ['Run your daily operations', 'Collect fees, mark attendance and keep parents in the loop on WhatsApp.'],
+  ['Run your daily operations', 'Collect fees, mark attendance and keep batches running smoothly.'],
 ];
 const WHY = [[Zap, 'Save 5–10 hours', 'every week'], [UsersRound, 'Better', 'parent communication'], [Layers, 'Timely fee collection &', 'higher recovery'], [BarChart3, 'Clear view of', 'growth & profitability']];
 const TYPES = [
@@ -49,13 +49,13 @@ const TYPES = [
   ['Skill & Hobby Classes', '(Spoken English, Computer, etc.)', '/landing/type3.webp'], ['Tuition & Private Classes', '(Small and mid-size institutes)', '/landing/type4.webp'],
 ];
 const FAQ = [
-  ['Do I need a WhatsApp Business account?', 'To deliver real WhatsApp messages you connect the WhatsApp Business Cloud API from Meta. Until then every message is logged in demo mode so you can try the full flow.'],
+  ['Is my student and fee data secure?', 'Yes. All student and financial records are stored securely with role-based access controls for your team.'],
   ['Can I try it with sample data?', 'Yes. After creating your account, load sample data with one click to explore every screen, then clear it when you are ready to add your own students.'],
   ['Does it work on phones?', 'Yes. The dashboard is fully responsive, so you can mark attendance or collect a fee from your phone.'],
   ['Can I export my data?', 'Students, fees, teachers and monthly reports can be exported as CSV files that open in Excel.'],
   ['Who can log in?', 'Admins, teachers and accounts staff each get their own login. Admins control access from Settings.'],
 ];
-const PLAN = ['Up to 500 students', 'All features included', 'WhatsApp notifications', 'Multi-user access', 'Online support'];
+const PLAN = ['Up to 500 students', 'All features included', 'Multi-user access', 'Online support'];
 
 const Chip = ({ children, className = '' }) => <span className={`inline-flex items-center gap-2 rounded-full bg-royal-100 px-3.5 py-1.5 text-[13px] font-semibold text-royal ${className}`}>{children}</span>;
 const Squiggle = () => (
@@ -84,7 +84,7 @@ export default async function Landing() {
             <h1 className="mt-6 max-w-[640px] text-[40px] font-extrabold leading-[1.08] tracking-tight sm:text-[50px] lg:text-[54px]">
               Run your coaching institute without <span className="relative inline-block text-royal">the chaos<Squiggle /></span>
             </h1>
-            <p className="mt-7 max-w-[500px] text-[17px] leading-relaxed text-slate-600">Admissions, fees, attendance, teachers and parent updates on WhatsApp, all in one simple dashboard. Spend less time on registers and more on teaching.</p>
+            <p className="mt-7 max-w-[500px] text-[17px] leading-relaxed text-slate-600">Admissions, fees, attendance, teachers and staff, all in one simple dashboard. Spend less time on registers and more on teaching.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Primary href={cta[0]}>{cta[1]}<ArrowRight className="h-4 w-4" /></Primary>
               <Outline href="#how">See how it works<PlayCircle className="h-5 w-5" /></Outline>
@@ -142,7 +142,7 @@ export default async function Landing() {
             <div><Chip>The Complete Solution</Chip></div>
             <h2 className="mt-5 text-[32px] font-extrabold leading-[1.15] tracking-tight sm:text-4xl">Everything your institute needs, <span className="relative inline-block text-royal">in one platform<Squiggle /></span></h2>
             <ul className="mt-7 space-y-3 text-[15px] font-medium text-slate-700">
-              {['Manage students, fees, attendance and teachers', 'Keep parents informed on WhatsApp automatically', 'Track your growth and profitability with reports', 'Access from any device, anytime, anywhere'].map((t) => <li key={t} className="flex items-start gap-3"><Tick />{t}</li>)}
+              {['Manage students, fees, attendance and teachers', 'Track your growth and profitability with reports', 'Access from any device, anytime, anywhere'].map((t) => <li key={t} className="flex items-start gap-3"><Tick />{t}</li>)}
             </ul>
             <div><Primary href="#features" className="mt-8">Explore all features<ArrowRight className="h-4 w-4" /></Primary></div>
           </div>
