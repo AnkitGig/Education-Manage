@@ -152,7 +152,7 @@ function StaffManagementContent() {
         <PageHeader
           icon={Users}
           title="Staff Management"
-          sub="Manage teachers, non-teaching staff, attendance, leaves, allocations and documents."
+          sub="Manage staff, roles, attendance, and leaves."
         >
           <button onClick={exportStaff} className="btn-outline">
             <Download className="h-4 w-4" />

@@ -221,14 +221,14 @@ export default function SalaryExpensesPage() {
       <PageHeader
         icon={Banknote}
         title="Salary &amp; Expenses"
-        sub="Process staff payroll, generate monthly salary slips, record operational expenses, and analyze profit margins."
+        sub="Manage payroll, expenses, and financial reports."
       >
-        <div className="flex items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-1.5 shadow-sm text-xs font-semibold text-ink-700">
-          <Calendar className="h-4 w-4 text-brand-600" />
+        <div className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm text-sm font-semibold text-slate-700">
+          <Calendar className="h-4 w-4 text-[#0875E8]" />
           <span>Salary Month:</span>
           <input
             type="month"
-            className="outline-none bg-transparent font-bold text-ink cursor-pointer"
+            className="outline-none bg-transparent font-bold text-slate-800 cursor-pointer h-full"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
           />
@@ -818,8 +818,8 @@ export default function SalaryExpensesPage() {
                   Math.max(
                     0,
                     (Number(payStaffModal.staff?.salary) || 0) +
-                      (Number(payStaffModal.allowances) || 0) -
-                      (Number(payStaffModal.deductions) || 0)
+                    (Number(payStaffModal.allowances) || 0) -
+                    (Number(payStaffModal.deductions) || 0)
                   )
                 )}
               </div>
