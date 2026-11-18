@@ -141,9 +141,8 @@ export default function StudentDetailPage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <Metric label="Fees due" value={inr(fees.due)} tone={fees.due > 0 ? 'text-rose-600' : 'text-emerald-600'} sub={`${inr(fees.paid)} paid`} />
-          <Metric label="Attendance" value={`${att.percent}%`} sub={`${att.present} of ${att.total} days`} />
           <Metric label="Admitted" value={fmtDate(s.admissionDate)} />
         </div>
       </div>

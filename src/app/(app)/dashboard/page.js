@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {
-  Database, Users, IndianRupee, Clock, UserPlus,
+  Database, Users, IndianRupee, Clock, CalendarCheck, UserPlus,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell,
