@@ -74,16 +74,9 @@ export default function Settings() {
             <div className="flex items-end justify-between"><div className="text-3xl font-extrabold">{inr(plan.price)}<span className="text-base font-medium text-slate-500"> / month</span></div><span className="text-xs text-slate-500">Valid till: {fmtDate(plan.validTill)}</span></div>
             <ul className="mt-3 grid grid-cols-2 gap-1.5 text-sm">{[`Up to ${plan.maxStudents} Students`, 'Reports & Analytics', 'Fees & Payments', 'Multi-user Access', 'Data Export', 'Online Support'].map((x) => <li key={x} className="flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-500" />{x}</li>)}</ul>
           </Card>
-          <Card title="Integrations" icon={Link2}>
-            <div className="space-y-3">{[[CreditCard, 'Cloudinary', 'Photos, logos and documents storage', f.integrations?.cloudinary]].map(([I, t, d, on]) => <div key={t} className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><I className="h-5 w-5" /></span><div className="flex-1"><div className="text-sm font-bold">{t}</div><div className="text-xs text-slate-500">{d}</div></div><Badge tone={on ? 'green' : 'gray'}>{on ? 'Connected' : 'Not connected'}</Badge></div>)}</div>
-            <p className="mt-3 text-xs text-slate-400">Credentials are read from your server’s <code>.env</code> file.</p>
-          </Card>
           <Card title="Data Management" icon={Database}>
             <p className="text-sm text-ink-500">Permanently delete all students, staff, classes, attendance, fees, expenses, and records.</p>
             <div className="mt-3 flex flex-wrap gap-2"><button className="btn border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={clearAll}>Clear all data</button></div>
-          </Card>
-          <Card title="System Settings" icon={SlidersHorizontal}>
-            <div className="space-y-3 text-sm">{[['emailNotifications', 'Email Notifications'], ['portalAccess', 'Student/Parent Portal Access'], ['mobileAccess', 'Mobile App Access'], ['autoBackup', 'Auto Backup']].map(([k, l]) => <div key={k} className="flex items-center justify-between"><span className="font-medium">{l}</span><Toggle checked={f.system?.[k] !== false} onChange={(v) => sys(k, v)} /></div>)}</div>
           </Card>
         </div>
       </div>
