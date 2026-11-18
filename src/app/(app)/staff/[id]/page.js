@@ -30,7 +30,7 @@ import { StatusBadge, Badge, Avatar, Card, Spinner, Modal, Field, inr } from '@/
 export default function StaffDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('overview'); // overview, attendance, leaves, documents
+  const [activeTab, setActiveTab] = useState('overview');
   const [editModal, setEditModal] = useState(false);
   const [uploadModal, setUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -174,13 +174,13 @@ export default function StaffDetailPage() {
             ['attendance', 'Attendance Records'],
             ['leaves', 'Leave History'],
             ['documents', 'Staff Documents'],
+            ['salary', 'Salary & Payouts'],
           ].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`relative pb-3 text-sm font-semibold transition-colors ${
-                activeTab === key ? 'text-brand-700' : 'text-ink-500 hover:text-ink'
-              }`}
+              className={`relative pb-3 text-sm font-semibold transition-colors ${activeTab === key ? 'text-brand-700' : 'text-ink-500 hover:text-ink'
+                }`}
             >
               {label}
               {activeTab === key && (
@@ -460,6 +460,131 @@ export default function StaffDetailPage() {
               ))}
           </div>
         </Card>
+      )}
+
+      {/* TAB: Salary & Payouts */}
+      {activeTab === 'salary' && (
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-ink/[.08] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Base Salary</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <Wallet className="h-5 w-5" />
+                </div>
+              </div>
+              <div className="mt-3 text-2xl font-black text-slate-800">{inr(staff.salary || 0)}</div>
+              <p className="mt-1 text-xs text-slate-400">Monthly contract rate</p>
+            </div>
+
+            <div className="rounded-2xl border border-ink/[.08] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Paid Out</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+              </div>
+              <div className="mt-3 text-2xl font-black text-emerald-600">
+                {inr(
+                  (staff.salaryHistory || [])
+                    .filter((s) => s.status === 'paid')
+                    .reduce((sum, s) => sum + (s.netAmount || 0), 0)
+                )}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                {(staff.salaryHistory || []).filter((s) => s.status === 'paid').length} payments processed
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-ink/[.08] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Pending Dues</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                  <Clock className="h-5 w-5" />
+                </div>
+              </div>
+              <div className="mt-3 text-2xl font-black text-amber-600">
+                {inr(
+                  (staff.salaryHistory || [])
+                    .filter((s) => s.status === 'pending')
+                    .reduce((sum, s) => sum + (s.netAmount || 0), 0)
+                )}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                {(staff.salaryHistory || []).filter((s) => s.status === 'pending').length} pending approval
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-ink/[.08] bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Pay Frequency</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                  <Calendar className="h-5 w-5" />
+                </div>
+              </div>
+              <div className="mt-3 text-2xl font-black text-slate-800">Monthly</div>
+              <p className="mt-1 text-xs text-slate-400">Disbursed by 1st-5th</p>
+            </div>
+          </div>
+
+          <Card
+            title="Salary & Disbursement History"
+          >
+            {(!staff.salaryHistory || staff.salaryHistory.length === 0) ? (
+              <div className="py-12 text-center text-sm text-slate-400">
+                <Wallet className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                No salary disbursements logged yet for this staff member.
+                <div className="mt-3">
+                  <Link href="/salary" className="btn-primary text-xs">
+                    Process Salary in Finance
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-ink/[.08] text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <th className="pb-3 pl-2">Month</th>
+                      <th className="pb-3">Base Salary</th>
+                      <th className="pb-3">Allowances</th>
+                      <th className="pb-3">Deductions</th>
+                      <th className="pb-3">Net Paid</th>
+                      <th className="pb-3">Status</th>
+                      <th className="pb-3">Payment Mode</th>
+                      <th className="pb-3 pr-2">Paid On</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-ink/[.06]">
+                    {staff.salaryHistory.map((sal) => (
+                      <tr key={sal._id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 pl-2 font-bold text-slate-800">{sal.month}</td>
+                        <td className="py-3 text-slate-600">{inr(sal.baseSalary || 0)}</td>
+                        <td className="py-3 text-emerald-600">+{inr(sal.allowances || 0)}</td>
+                        <td className="py-3 text-rose-500">-{inr(sal.deductions || 0)}</td>
+                        <td className="py-3 font-bold text-slate-900">{inr(sal.netAmount || 0)}</td>
+                        <td className="py-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${sal.status === 'paid'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                              }`}
+                          >
+                            {sal.status === 'paid' ? 'Paid' : 'Pending'}
+                          </span>
+                        </td>
+                        <td className="py-3 text-slate-600">{sal.paymentMode || 'Bank Transfer'}</td>
+                        <td className="py-3 pr-2 text-slate-500 text-xs">
+                          {sal.paidOn ? fmtDate(sal.paidOn) : '–'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
       )}
 
       {/* Upload Document Modal */}

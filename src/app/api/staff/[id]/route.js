@@ -4,15 +4,17 @@ import { connectDB } from '@/lib/db';
 import Staff from '@/models/Staff';
 import StaffAttendance from '@/models/StaffAttendance';
 import StaffLeave from '@/models/StaffLeave';
+import Salary from '@/models/Salary';
 
 export const GET = wrap(async (req, { params }) => {
   await connectDB();
   const staff = await Staff.findById(params.id).lean();
   if (!staff) return NextResponse.json({ error: 'Staff member not found' }, { status: 404 });
 
-  const [attendance, leaves] = await Promise.all([
+  const [attendance, leaves, salaries] = await Promise.all([
     StaffAttendance.find({ staff: params.id }).sort({ date: -1 }).limit(30).lean(),
     StaffLeave.find({ staff: params.id }).sort({ createdAt: -1 }).lean(),
+    Salary.find({ staff: params.id }).sort({ month: -1 }).lean(),
   ]);
 
   const presentCount = attendance.filter((a) => a.status === 'Present').length;
@@ -25,6 +27,7 @@ export const GET = wrap(async (req, { params }) => {
     ...staff,
     attendanceHistory: attendance,
     leaveHistory: leaves,
+    salaryHistory: salaries,
     attendanceStats: {
       present: presentCount,
       absent: absentCount,
