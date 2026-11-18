@@ -25,7 +25,6 @@ import { useApi, api, run, todayKey, downloadCSV } from '@/lib/client';
 import { Avatar, Badge, StatusBadge, Spinner, Card, PageHeader } from '@/components/ui';
 
 const TABS = [
-  { id: 'students', label: 'Student Attendance', sub: 'Mark Daily Attendance', icon: Users },
   { id: 'staff', label: 'Staff Attendance', sub: 'Track Staff Attendance', icon: Users },
   { id: 'reports', label: 'Attendance Reports', sub: 'View & Export Reports', icon: BarChart3 },
   { id: 'late', label: 'Late Arrivals', sub: 'Track Late Comers', icon: Clock },
@@ -35,7 +34,7 @@ const TABS = [
 function AttendanceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'students';
+  const currentTab = searchParams.get('tab') || 'staff';
   const [tab, setTab] = useState(currentTab);
 
   useEffect(() => {

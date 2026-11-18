@@ -49,7 +49,6 @@ export default function StudentDetailPage() {
 
   const fees = summary?.fees || { total: 0, paid: 0, due: 0, records: [] };
   const paymentLogs = summary?.paymentLogs || [];
-  const att = summary?.attendance || { present: 0, absent: 0, late: 0, total: 0, percent: 0 };
   const docs = s.documents || [];
 
   const openPay = () => {
@@ -97,7 +96,6 @@ export default function StudentDetailPage() {
   const tabs = [
     ['profile', 'Profile'],
     ['fees', `Fees${fees.records?.length ? ` (${fees.records.length})` : ''}`],
-    ['attendance', 'Attendance'],
     ['documents', `Documents${docs.length ? ` (${docs.length})` : ''}`],
     ['payments', `Payment Logs${paymentLogs.length ? ` (${paymentLogs.length})` : ''}`],
   ];
@@ -365,32 +363,6 @@ export default function StudentDetailPage() {
               },
             ]}
           />
-        </Card>
-      )}
-
-      {/* Attendance */}
-      {tab === 'attendance' && (
-        <Card title="Attendance this month" action={<Link href="/attendance" className="text-sm font-semibold text-brand-600 hover:underline">Open attendance</Link>}>
-          {att.total === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-400">No attendance marked yet.</p>
-          ) : (
-            <div className="space-y-5">
-              <div>
-                <div className="mb-2 flex items-baseline justify-between">
-                  <span className="text-3xl font-bold text-ink">{att.percent}%</span>
-                  <span className="text-sm text-ink-400">{att.total} days tracked</span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-ink/10">
-                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${att.percent}%` }} />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Metric label="Present" value={att.present} tone="text-emerald-600" />
-                <Metric label="Late" value={att.late} tone="text-amber-600" />
-                <Metric label="Absent" value={att.absent} tone="text-rose-600" />
-              </div>
-            </div>
-          )}
         </Card>
       )}
 

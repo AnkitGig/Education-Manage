@@ -5,7 +5,6 @@ import { monthFinance } from '@/lib/finance';
 import Student from '@/models/Student';
 import FeeRecord from '@/models/FeeRecord';
 import Batch from '@/models/Batch';
-import Attendance from '@/models/Attendance';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -14,7 +13,7 @@ export const GET = wrap(async () => {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const months = lastMonths(10);
 
-  const [total, thisMonth, fin, pend, batches, sc, growth, recentStudents, dues, att] = await Promise.all([
+  const [total, thisMonth, fin, pend, batches, sc, growth, recentStudents, dues] = await Promise.all([
     Student.countDocuments(),
     Student.countDocuments({ createdAt: { $gte: monthStart } }),
     monthFinance(curMonth()),
@@ -24,7 +23,6 @@ export const GET = wrap(async () => {
     Promise.all(months.map((m) => { const [y, mo] = m.split('-').map(Number); return Student.countDocuments({ createdAt: { $lt: new Date(y, mo, 1) } }).then((count) => ({ m: new Date(y, mo - 1, 1).toLocaleString('en-IN', { month: 'short' }), count })); })),
     Student.find().sort({ createdAt: -1 }).limit(5).populate('course', 'name').populate('batch', 'name').lean(),
     FeeRecord.find({ $expr: { $lt: ['$paid', '$amount'] } }).sort({ dueDate: 1 }).limit(5).populate('student', 'name studentId parentMobile').lean(),
-    Attendance.findOne().sort({ date: -1 }).populate('records.student', 'name photo').lean(),
   ]);
 
   const S = Object.fromEntries(sc.map((x) => [String(x._id), x.n]));
@@ -40,7 +38,6 @@ export const GET = wrap(async () => {
       state: nowMin >= toMin(b.endTime) ? 'completed' : nowMin >= toMin(b.startTime) ? 'ongoing' : 'upcoming',
     })),
     growth, recentStudents, dueReminders: dues.filter((d) => d.student),
-    recentAttendance: (att?.records || []).slice(0, 5).filter((r) => r.student), attendanceDate: att?.date,
   });
 });
 

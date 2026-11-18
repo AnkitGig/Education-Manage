@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
-  CalendarCheck,
   UserCog,
   Wallet,
   Banknote,
@@ -26,7 +25,6 @@ const GROUPS = [
     [
       ['/students', 'Students', Users],
       ['/courses', 'Classes & Sections', BookOpen],
-      ['/attendance', 'Attendance', CalendarCheck],
       ['/staff', 'Staff Management', UserCog],
     ],
   ],

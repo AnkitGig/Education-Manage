@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {
-  Database, Users, IndianRupee, Clock, CalendarCheck, UserPlus,
+  Database, Users, IndianRupee, Clock, UserPlus,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell,
@@ -49,7 +49,6 @@ export default function Dashboard() {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/attendance" className="btn-outline"><CalendarCheck className="h-4 w-4" />Mark attendance</Link>
           <Link href="/fees" className="btn-outline"><IndianRupee className="h-4 w-4" />Collect fee</Link>
           <Link href="/students/new" className="btn-primary"><UserPlus className="h-4 w-4" />Add student</Link>
         </div>
@@ -165,7 +164,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card title="Recent students" action={viewAll('/students')} className="xl:col-span-2">
+        <Card title="Recent students" action={viewAll('/students')} className="xl:col-span-3">
           <Table
             empty="No students yet"
             rows={d.recentStudents}
@@ -175,20 +174,6 @@ export default function Dashboard() {
               { h: 'Status', render: (s) => <StatusBadge s={s.status} /> },
             ]}
           />
-        </Card>
-
-        <Card title="Recent attendance" action={viewAll('/attendance')}>
-          <div className="space-y-3">
-            {d.recentAttendance.length === 0 && <p className="py-6 text-center text-sm text-ink-400">Nothing marked yet</p>}
-            {d.recentAttendance.map((r) => (
-              <div key={r.student._id} className="flex items-center gap-3">
-                <Avatar src={r.student.photo?.url} name={r.student.name} size={32} />
-                <span className="flex-1 truncate text-sm text-ink">{r.student.name}</span>
-                <StatusBadge s={r.status} />
-              </div>
-            ))}
-            {d.attendanceDate && <p className="pt-1 text-xs text-ink-400">As of {fmtDate(d.attendanceDate)}</p>}
-          </div>
         </Card>
       </div>
     </div>

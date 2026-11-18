@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { wrap } from '@/lib/crud';
-import { curMonth, feeStatus } from '@/lib/utils';
+import { feeStatus } from '@/lib/utils';
 import FeeRecord from '@/models/FeeRecord';
-import Attendance from '@/models/Attendance';
 import { syncStudentFeeRecords } from '@/lib/feeRecords';
 
-// Fee + attendance summary for one student (used by profile panels)
+// Fee summary for one student (used by profile panels)
 export const GET = wrap(async (_, { params }) => {
   const id = params.id;
   let recs = await FeeRecord.find({ student: id }).sort({ dueDate: 1 }).lean();
@@ -13,15 +12,11 @@ export const GET = wrap(async (_, { params }) => {
     await syncStudentFeeRecords(id);
     recs = await FeeRecord.find({ student: id }).sort({ dueDate: 1 }).lean();
   }
-  const att = await Attendance.find({ date: { $regex: `^${curMonth()}` }, 'records.student': id }).lean();
 
   const total = recs.reduce((s, r) => s + r.amount, 0);
   const paid = recs.reduce((s, r) => s + r.paid, 0);
   const next = recs.find((r) => r.paid < r.amount);
   const lastPaid = [...recs].reverse().find((r) => r.paid > 0);
-  const c = { present: 0, absent: 0, late: 0 };
-  att.forEach((a) => { const r = a.records.find((x) => String(x.student) === id); if (r) c[r.status]++; });
-  const days = c.present + c.absent + c.late;
 
   // Extract all payment logs grouped by receipt / transaction, sorted newest first
   const paymentsByReceipt = {};
@@ -99,7 +94,7 @@ export const GET = wrap(async (_, { params }) => {
       records: recs.map((r) => ({ ...r, status: feeStatus(r) })),
     },
     paymentLogs: allPayments,
-    attendance: { ...c, total: days, percent: days ? Math.round(((c.present + c.late) / days) * 100) : 0 },
+    attendance: { present: 0, absent: 0, late: 0, total: 0, percent: 0 },
   });
 });
 

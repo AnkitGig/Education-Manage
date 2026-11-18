@@ -94,12 +94,6 @@ function Students() {
           <Card title="Fees Summary">
             <div className="grid grid-cols-3 gap-2 text-sm"><div><div className="text-xs text-slate-500">Total Fees</div><b className="text-lg">{inr(sum?.fees.total)}</b></div><div><div className="text-xs text-slate-500">Paid</div><b className="text-lg text-emerald-600">{inr(sum?.fees.paid)}</b></div><div><div className="text-xs text-slate-500">Due</div><b className="text-lg text-red-500">{inr(sum?.fees.due)}</b></div></div>
           </Card>
-          <Card title="Attendance (This Month)">
-            <div className="flex items-center gap-5">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full" style={{ background: `conic-gradient(#10b981 ${(sum?.attendance.percent ?? 0) * 3.6}deg, #e5e7eb 0)` }}><div className="flex h-[74px] w-[74px] items-center justify-center rounded-full bg-white text-xl font-bold">{sum?.attendance.percent ?? 0}%</div></div>
-              <div className="space-y-1 text-sm"><div>Present: <b>{sum?.attendance.present ?? 0} days</b></div><div>Absent: <b>{sum?.attendance.absent ?? 0} days</b></div><div>Late: <b>{sum?.attendance.late ?? 0} days</b></div></div>
-            </div>
-          </Card>
           <div className="flex gap-2">
             <Link href={`/students/${sel._id}`} className="btn-primary flex-1"><Eye className="h-4 w-4" />View Full Profile</Link>
             <Link href={`/students/${sel._id}/edit`} className="btn-outline flex-1"><Pencil className="h-4 w-4" />Edit</Link>
